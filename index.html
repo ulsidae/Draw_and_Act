@@ -1,0 +1,4368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Draw and Act!</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#101014;
+    color:#fff;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input,
+select,
+textarea{
+    font:inherit;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:13px 18px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+button:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+}
+
+.app{
+    width:min(900px,100%);
+    margin:auto;
+    padding:25px 16px 70px;
+}
+
+.logo{
+    text-align:center;
+    font-size:clamp(48px,11vw,82px);
+    font-weight:1000;
+    letter-spacing:-5px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#aaa;
+    margin-top:4px;
+}
+
+.description{
+    max-width:680px;
+    margin:15px auto 30px;
+    text-align:center;
+    line-height:1.7;
+    color:#777;
+    font-size:14px;
+}
+
+.description strong{
+    color:#fff;
+}
+
+.screen{
+    display:none;
+}
+
+.screen.active{
+    display:block;
+}
+
+.card{
+    background:#19191f;
+    border:1px solid #303038;
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:16px;
+}
+
+h2{
+    margin-top:0;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    padding:13px;
+    margin-bottom:12px;
+    border:1px solid #3a3a42;
+    border-radius:10px;
+    background:#111115;
+    color:#fff;
+    outline:none;
+}
+
+textarea{
+    min-height:140px;
+    resize:vertical;
+    font-family:monospace;
+    font-size:12px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    color:#aaa;
+    font-size:13px;
+}
+
+.primary{
+    width:100%;
+    background:#fff;
+    color:#111;
+}
+
+.secondary{
+    background:#303038;
+    color:#fff;
+}
+
+.danger{
+    background:#702525;
+    color:#fff;
+}
+
+.center{
+    text-align:center;
+}
+
+.small{
+    color:#777;
+    font-size:13px;
+}
+
+.status{
+    min-height:24px;
+    margin-top:12px;
+    text-align:center;
+    color:#aaa;
+}
+
+.room-code{
+    text-align:center;
+    font-size:52px;
+    font-weight:1000;
+    letter-spacing:10px;
+    margin:12px 0;
+}
+
+.topic-box{
+    padding:18px;
+    background:#111115;
+    border-radius:12px;
+    text-align:center;
+}
+
+.topic-label{
+    color:#666;
+    font-size:11px;
+    letter-spacing:3px;
+}
+
+.topic{
+    margin-top:7px;
+    font-size:28px;
+    font-weight:900;
+}
+
+.players{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.player{
+    padding:10px 14px;
+    background:#292930;
+    border-radius:10px;
+}
+
+.phase{
+    text-align:center;
+    color:#777;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:3px;
+}
+
+.game-topic{
+    text-align:center;
+    font-size:clamp(24px,6vw,38px);
+    font-weight:1000;
+    margin:8px 0 18px;
+}
+
+.timer{
+    text-align:center;
+    font-size:58px;
+    line-height:1;
+    font-weight:1000;
+    margin:15px;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#fff;
+    border-radius:14px;
+    touch-action:none;
+}
+
+.toolbar{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+}
+
+.toolbar input[type=color]{
+    width:48px;
+    height:42px;
+    padding:2px;
+    margin:0;
+}
+
+.toolbar input[type=range]{
+    flex:1;
+    margin:0;
+}
+
+.scene{
+    margin-bottom:20px;
+}
+
+.scene canvas{
+    margin-bottom:10px;
+}
+
+.scene audio{
+    width:100%;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.big{
+    font-size:60px;
+}
+
+.copy-row{
+    display:flex;
+    gap:8px;
+}
+
+.copy-row textarea{
+    margin-bottom:0;
+}
+
+.copy-row button{
+    flex:0 0 110px;
+}
+
+.vote-count{
+    text-align:center;
+    font-size:22px;
+    font-weight:900;
+    margin:14px 0 10px;
+}
+
+.vote-button{
+    width:100%;
+}
+
+.winner{
+    border:2px solid #fff!important;
+    box-shadow:0 0 30px rgba(255,255,255,.15);
+}
+
+.winner-badge{
+    display:inline-block;
+    padding:6px 12px;
+    border-radius:999px;
+    background:#fff;
+    color:#111;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+
+@media(max-width:600px){
+
+    .logo{
+        letter-spacing:-3px;
+    }
+
+    .room-code{
+        font-size:42px;
+    }
+
+    .copy-row{
+        flex-direction:column;
+    }
+
+    .copy-row button{
+        flex:auto;
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+<div class="logo">
+Draw and Act!
+</div>
+
+<div class="subtitle">
+그리고, 연기하고, 이야기를 만들어보세요!
+</div>
+
+<div class="description">
+그리고 상황에 맞는 녹음을 하세요!<br>
+주제를 정해 친구들, 혹은 새로운 사람들과 함께 맞는 그림을 그리고
+녹음하며 여러분만의 작은 이야기를 만들어보세요.
+<br>
+오직 전자기기와 여러분의 상상력만 있으면 됩니다!
+<br><br>
+<strong>최다 득표를 노려보세요!</strong>
+</div>
+
+</header>
+
+
+<!-- =====================================================
+HOME
+===================================================== -->
+
+<section id="home" class="screen active">
+
+<div class="card">
+
+<h2>🎨 새로운 이야기 만들기</h2>
+
+<label>닉네임</label>
+
+<input
+id="hostName"
+maxlength="20"
+placeholder="예: 홍길동"
+>
+
+<label>인원 수</label>
+
+<select id="playerCount">
+
+<option value="2">2명</option>
+<option value="3">3명</option>
+<option value="4" selected>4명</option>
+<option value="5">5명</option>
+<option value="6">6명</option>
+
+</select>
+
+<label>이야기의 주제</label>
+
+<input
+id="topicInput"
+maxlength="120"
+placeholder="예: 어느 날 갑자기 우주에 떨어졌습니다."
+>
+
+<button
+id="createButton"
+class="primary"
+>
+방 만들기
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>🚪 이야기 참가하기</h2>
+
+<label>닉네임</label>
+
+<input
+id="joinName"
+maxlength="20"
+placeholder="예: 김철수"
+>
+
+<label>방 코드</label>
+
+<input
+id="joinCode"
+maxlength="4"
+placeholder="ABCD"
+>
+
+<button
+id="joinButton"
+class="secondary"
+>
+방 참가하기
+</button>
+
+</div>
+
+<div
+id="homeStatus"
+class="status"
+></div>
+
+</section>
+
+
+<!-- =====================================================
+HOST SIGNALING
+===================================================== -->
+
+<section id="hostSignal" class="screen">
+
+<div class="card">
+
+<div class="phase">
+HOST CONNECTION
+</div>
+
+<h2 class="center">
+친구를 초대해 주세요.
+</h2>
+
+<div
+class="room-code"
+id="hostRoomCode"
+>
+----
+</div>
+
+<p class="small center">
+아래 링크를 친구에게 보내면 방 코드가 자동으로 입력됩니다.
+</p>
+
+<input
+id="inviteLink"
+readonly
+>
+
+<button
+id="copyInvite"
+class="primary"
+>
+🔗 초대 링크 복사
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+1️⃣ 연결 코드
+</h2>
+
+<p class="small">
+참가자가 아래 연결 코드를 받아 입력할 수 있도록 전달해 주세요.
+각 참가자는 별도의 연결 코드를 사용해야 합니다.
+</p>
+
+<div class="copy-row">
+
+<textarea
+id="hostOffer"
+readonly
+placeholder="연결 코드가 여기에 표시됩니다."
+></textarea>
+
+<button
+id="copyHostOffer"
+class="secondary"
+>
+📋 코드 복사
+</button>
+
+</div>
+
+<button
+id="newGuestConnection"
+class="primary"
+style="margin-top:10px;"
+>
+➕ 새 참가자 연결 코드 만들기
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+2️⃣ 참가자의 응답 코드
+</h2>
+
+<p class="small">
+참가자가 보내드린 응답 코드를 아래에 붙여넣어 주세요.
+</p>
+
+<div class="copy-row">
+
+<textarea
+id="hostAnswer"
+placeholder="참가자가 보내드린 응답 코드를 붙여넣어 주세요."
+></textarea>
+
+<button
+id="copyHostAnswer"
+class="secondary"
+>
+📋 복사
+</button>
+
+</div>
+
+<button
+id="connectGuest"
+class="primary"
+style="margin-top:10px;"
+>
+연결하기
+</button>
+
+</div>
+
+
+<div
+id="hostSignalStatus"
+class="status"
+></div>
+
+<button
+id="hostLobbyButton"
+class="secondary"
+style="width:100%;"
+>
+로비로 이동
+</button>
+
+</section>
+
+
+<!-- =====================================================
+GUEST SIGNALING
+===================================================== -->
+
+<section id="guestSignal" class="screen">
+
+<div class="card">
+
+<div class="phase">
+JOIN ROOM
+</div>
+
+<h2 class="center">
+방에 연결하기
+</h2>
+
+<p class="small center">
+방장에게 받은 연결 코드를 붙여넣어 주세요.
+</p>
+
+<textarea
+id="guestOffer"
+placeholder="방장이 보내주신 연결 코드를 붙여넣어 주세요."
+></textarea>
+
+<button
+id="createAnswer"
+class="primary"
+>
+응답 코드 만들기
+</button>
+
+</div>
+
+
+<div
+id="guestAnswerBox"
+class="card hidden"
+>
+
+<h2>
+2️⃣ 응답 코드를 방장에게 보내 주세요.
+</h2>
+
+<div class="copy-row">
+
+<textarea
+id="guestAnswer"
+readonly
+></textarea>
+
+<button
+id="copyAnswer"
+class="secondary"
+>
+📋 복사
+</button>
+
+</div>
+
+<p class="small">
+응답 코드를 방장에게 전달하고 연결이 완료될 때까지 기다려 주세요.
+</p>
+
+</div>
+
+<div
+id="guestSignalStatus"
+class="status"
+></div>
+
+</section>
+
+
+<!-- =====================================================
+LOBBY
+===================================================== -->
+
+<section id="lobby" class="screen">
+
+<div class="card">
+
+<div class="phase">
+LOBBY
+</div>
+
+<div
+id="lobbyRoomCode"
+class="room-code"
+>
+----
+</div>
+
+<div class="topic-box">
+
+<div class="topic-label">
+TODAY'S STORY
+</div>
+
+<div
+id="lobbyTopic"
+class="topic"
+>
+-
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+👥 참가자
+</h2>
+
+<div
+id="players"
+class="players"
+></div>
+
+<p
+id="playerStatus"
+class="small"
+></p>
+
+</div>
+
+
+<button
+id="startGame"
+class="primary"
+>
+🎬 이야기 시작하기
+</button>
+
+<div
+id="lobbyStatus"
+class="status"
+>
+참가자를 기다리는 중입니다.
+</div>
+
+</section>
+
+
+<!-- =====================================================
+DRAW
+===================================================== -->
+
+<section id="draw" class="screen">
+
+<div class="card">
+
+<div class="phase">
+DRAW
+</div>
+
+<div
+id="drawTopic"
+class="game-topic"
+></div>
+
+<div class="center small">
+이전 장면을 보고 이야기를 이어서 그려 주세요.
+</div>
+
+</div>
+
+
+<div
+id="previousCard"
+class="card hidden"
+>
+
+<div class="phase">
+PREVIOUS SCENE
+</div>
+
+<canvas
+id="previousCanvas"
+width="800"
+height="600"
+></canvas>
+
+</div>
+
+
+<div class="card">
+
+<div
+id="drawTimer"
+class="timer"
+>
+30
+</div>
+
+<canvas
+id="drawCanvas"
+width="800"
+height="600"
+></canvas>
+
+<div class="toolbar">
+
+<input
+id="colorPicker"
+type="color"
+value="#111111"
+>
+
+<input
+id="brushSize"
+type="range"
+min="2"
+max="40"
+value="6"
+>
+
+<button
+id="clearCanvas"
+class="secondary"
+>
+지우기
+</button>
+
+</div>
+
+<button
+id="submitDrawing"
+class="primary"
+style="margin-top:15px;"
+>
+그림 완성하기
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+WAITING
+===================================================== -->
+
+<section id="waiting" class="screen">
+
+<div class="card center">
+
+<div class="big">
+⏳
+</div>
+
+<h2 id="waitingTitle">
+다른 참가자를 기다리는 중입니다.
+</h2>
+
+<p
+id="waitingText"
+class="small"
+></p>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+ACT
+===================================================== -->
+
+<section id="act" class="screen">
+
+<div class="card">
+
+<div class="phase">
+ACT
+</div>
+
+<div
+id="actTopic"
+class="game-topic"
+></div>
+
+<div class="center small">
+이 장면에 어울리는 목소리를 직접 연기해 주세요.
+</div>
+
+</div>
+
+
+<div class="card">
+
+<canvas
+id="actCanvas"
+width="800"
+height="600"
+></canvas>
+
+<div
+id="recordTimer"
+class="timer"
+>
+15
+</div>
+
+<button
+id="recordButton"
+class="primary"
+>
+🎙️ 녹음 시작
+</button>
+
+<div
+id="recordStatus"
+class="status"
+>
+자유롭게 연기해 주세요!
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+RESULT
+===================================================== -->
+
+<section id="result" class="screen">
+
+<div class="card center">
+
+<div class="phase">
+FINAL STORY
+</div>
+
+<h2>
+🎬 우리의 이야기
+</h2>
+
+<p class="small">
+그림과 연기가 하나의 작은 이야기가 되었습니다.
+가장 재미있었던 장면에 투표해 주세요.
+</p>
+
+</div>
+
+
+<div id="resultScenes"></div>
+
+
+<div class="card">
+
+<button
+id="playAll"
+class="primary"
+>
+▶ 이야기 재생하기
+</button>
+
+<button
+id="exportVideo"
+class="secondary"
+style="width:100%;margin-top:10px;"
+>
+💾 WebM으로 저장
+</button>
+
+<div
+id="resultStatus"
+class="status"
+></div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+CONFIG
+========================================================= */
+
+const STUN_SERVERS = {
+
+    iceServers:[
+        {
+            urls:"stun:stun.l.google.com:19302"
+        },
+        {
+            urls:"stun:stun1.l.google.com:19302"
+        }
+    ]
+
+};
+
+const ROOM_PREFIX =
+    location.origin +
+    location.pathname;
+
+
+/* =========================================================
+STATE
+========================================================= */
+
+let role = null;
+
+let myId =
+    crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36);
+
+let myName = "";
+
+let roomCode = "";
+
+let topic = "";
+
+let maxPlayers = 4;
+
+let isHost = false;
+
+let connections = new Map();
+
+let players = [];
+
+let currentTurn = 0;
+
+let drawings = {};
+
+let audios = {};
+
+let mediaRecorder = null;
+
+let recordedChunks = [];
+
+let drawInterval = null;
+
+let recordInterval = null;
+
+
+/* =========================================================
+VOTING STATE
+========================================================= */
+
+let votes = {};
+
+let voteVoters = {};
+
+let myVote = null;
+
+let voteTimer = null;
+
+let voteEnded = false;
+
+
+/* =========================================================
+SCREEN
+========================================================= */
+
+const screenIds = [
+
+    "home",
+    "hostSignal",
+    "guestSignal",
+    "lobby",
+    "draw",
+    "waiting",
+    "act",
+    "result"
+
+];
+
+function showScreen(id){
+
+    screenIds.forEach(screen => {
+
+        document
+            .getElementById(screen)
+            .classList.remove("active");
+
+    });
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+
+    window.scrollTo(0,0);
+
+}
+
+
+/* =========================================================
+URL ROOM
+========================================================= */
+
+function getRoomFromURL(){
+
+    const params =
+        new URLSearchParams(
+            location.hash.replace("#","?")
+        );
+
+    return params.get("room") || "";
+
+}
+
+const urlRoom =
+    getRoomFromURL();
+
+if(urlRoom){
+
+    document
+        .getElementById("joinCode")
+        .value =
+        urlRoom.toUpperCase();
+
+}
+
+
+/* =========================================================
+UTIL
+========================================================= */
+
+function randomRoom(){
+
+    return Math.random()
+        .toString(36)
+        .substring(2,6)
+        .toUpperCase();
+
+}
+
+
+function encode(obj){
+
+    return btoa(
+        unescape(
+            encodeURIComponent(
+                JSON.stringify(obj)
+            )
+        )
+    );
+
+}
+
+
+function decode(str){
+
+    return JSON.parse(
+        decodeURIComponent(
+            escape(
+                atob(str)
+            )
+        )
+    );
+
+}
+
+
+async function copyText(text){
+
+    try{
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+    }catch{
+
+        const input =
+            document.createElement("textarea");
+
+        input.value = text;
+
+        document.body.appendChild(input);
+
+        input.select();
+
+        document.execCommand("copy");
+
+        input.remove();
+
+    }
+
+}
+
+
+/* =========================================================
+CREATE ROOM
+========================================================= */
+
+document
+    .getElementById("createButton")
+    .onclick =
+    async () => {
+
+        myName =
+            document
+                .getElementById("hostName")
+                .value
+                .trim() ||
+            "방장";
+
+        topic =
+            document
+                .getElementById("topicInput")
+                .value
+                .trim();
+
+        maxPlayers =
+            Number(
+                document
+                    .getElementById("playerCount")
+                    .value
+            );
+
+        if(!topic){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "주제를 먼저 입력해 주세요.";
+
+            return;
+
+        }
+
+        role = "host";
+
+        isHost = true;
+
+        roomCode =
+            randomRoom();
+
+        players = [
+
+            {
+                id:myId,
+                name:myName,
+                host:true
+            }
+
+        ];
+
+        history.replaceState(
+            null,
+            "",
+            "#room=" + roomCode
+        );
+
+        await prepareHost();
+
+    };
+
+
+/* =========================================================
+HOST PREPARE
+========================================================= */
+
+async function prepareHost(){
+
+    document
+        .getElementById("hostRoomCode")
+        .textContent =
+        roomCode;
+
+    document
+        .getElementById("inviteLink")
+        .value =
+        ROOM_PREFIX +
+        "#room=" +
+        roomCode;
+
+    document
+        .getElementById("hostSignalStatus")
+        .textContent =
+        "참가자를 연결할 준비가 되었습니다.";
+
+    showScreen("hostSignal");
+
+    await createGuestConnection();
+
+}
+
+
+/* =========================================================
+CREATE GUEST CONNECTION
+========================================================= */
+
+document
+    .getElementById("newGuestConnection")
+    .onclick =
+    async () => {
+
+        if(
+            players.length >=
+            maxPlayers
+        ){
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "설정된 인원이 모두 참가했습니다.";
+
+            return;
+
+        }
+
+        await createGuestConnection();
+
+    };
+
+
+async function createGuestConnection(){
+
+    const pc =
+        new RTCPeerConnection(
+            STUN_SERVERS
+        );
+
+    const channel =
+        pc.createDataChannel("game");
+
+    setupChannel(
+        channel,
+        pc,
+        true
+    );
+
+    const connectionId =
+        crypto.randomUUID();
+
+    connections.set(
+        connectionId,
+        {
+            pc,
+            channel,
+            pending:true
+        }
+    );
+
+    const offer =
+        await pc.createOffer();
+
+    await pc.setLocalDescription(
+        offer
+    );
+
+    await waitForICE(pc);
+
+    const offerCode =
+        encode({
+
+            type:
+                pc.localDescription.type,
+
+            sdp:
+                pc.localDescription.sdp
+
+        });
+
+    pc._connectionId =
+        connectionId;
+
+    pc._offerCode =
+        offerCode;
+
+    document
+        .getElementById("hostOffer")
+        .value =
+        offerCode;
+
+    document
+        .getElementById("hostSignalStatus")
+        .textContent =
+        "연결 코드를 참가자에게 보내 주세요.";
+
+}
+
+
+/* =========================================================
+WAIT ICE
+========================================================= */
+
+function waitForICE(pc){
+
+    return new Promise(resolve => {
+
+        if(
+            pc.iceGatheringState ===
+            "complete"
+        ){
+
+            resolve();
+
+            return;
+
+        }
+
+        const check = () => {
+
+            if(
+                pc.iceGatheringState ===
+                "complete"
+            ){
+
+                pc.removeEventListener(
+                    "icegatheringstatechange",
+                    check
+                );
+
+                resolve();
+
+            }
+
+        };
+
+        pc.addEventListener(
+            "icegatheringstatechange",
+            check
+        );
+
+        setTimeout(
+            resolve,
+            5000
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+JOIN
+========================================================= */
+
+document
+    .getElementById("joinButton")
+    .onclick =
+    () => {
+
+        myName =
+            document
+                .getElementById("joinName")
+                .value
+                .trim() ||
+            "참가자";
+
+        roomCode =
+            document
+                .getElementById("joinCode")
+                .value
+                .trim()
+                .toUpperCase();
+
+        if(!roomCode){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "방 코드를 입력해 주세요.";
+
+            return;
+
+        }
+
+        role = "guest";
+
+        isHost = false;
+
+        history.replaceState(
+            null,
+            "",
+            "#room=" +
+            roomCode
+        );
+
+        showScreen(
+            "guestSignal"
+        );
+
+    };
+
+
+/* =========================================================
+GUEST ANSWER
+========================================================= */
+
+document
+    .getElementById("createAnswer")
+    .onclick =
+    async () => {
+
+        const offerText =
+            document
+                .getElementById("guestOffer")
+                .value
+                .trim();
+
+        if(!offerText){
+
+            document
+                .getElementById("guestSignalStatus")
+                .textContent =
+                "방장이 보내드린 연결 코드를 붙여넣어 주세요.";
+
+            return;
+
+        }
+
+        try{
+
+            const offer =
+                decode(
+                    offerText
+                );
+
+            const pc =
+                new RTCPeerConnection(
+                    STUN_SERVERS
+                );
+
+            pc.ondatachannel =
+                event => {
+
+                    setupChannel(
+                        event.channel,
+                        pc,
+                        false
+                    );
+
+                };
+
+            await pc.setRemoteDescription(
+                offer
+            );
+
+            const answer =
+                await pc.createAnswer();
+
+            await pc.setLocalDescription(
+                answer
+            );
+
+            await waitForICE(
+                pc
+            );
+
+            window.guestPC =
+                pc;
+
+            document
+                .getElementById("guestAnswer")
+                .value =
+                encode({
+
+                    type:
+                        pc.localDescription.type,
+
+                    sdp:
+                        pc.localDescription.sdp
+
+                });
+
+            document
+                .getElementById("guestAnswerBox")
+                .classList
+                .remove("hidden");
+
+            document
+                .getElementById("guestSignalStatus")
+                .textContent =
+                "응답 코드를 방장에게 보내 주세요.";
+
+        }catch(error){
+
+            console.error(error);
+
+            document
+                .getElementById("guestSignalStatus")
+                .textContent =
+                "연결 코드가 올바르지 않습니다.";
+
+        }
+
+    };
+
+
+/* =========================================================
+COPY BUTTONS
+========================================================= */
+
+document
+    .getElementById("copyInvite")
+    .onclick =
+    () => {
+
+        copyText(
+            document
+                .getElementById("inviteLink")
+                .value
+        );
+
+        document
+            .getElementById("hostSignalStatus")
+            .textContent =
+            "초대 링크를 복사했습니다.";
+
+    };
+
+
+document
+    .getElementById("copyHostOffer")
+    .onclick =
+    () => {
+
+        const text =
+            document
+                .getElementById("hostOffer")
+                .value
+                .trim();
+
+        if(!text){
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "먼저 연결 코드를 만들어 주세요.";
+
+            return;
+
+        }
+
+        copyText(text);
+
+        document
+            .getElementById("hostSignalStatus")
+            .textContent =
+            "연결 코드를 복사했습니다.";
+
+    };
+
+
+document
+    .getElementById("copyHostAnswer")
+    .onclick =
+    () => {
+
+        const text =
+            document
+                .getElementById("hostAnswer")
+                .value
+                .trim();
+
+        if(!text){
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "먼저 참가자의 응답 코드를 입력해 주세요.";
+
+            return;
+
+        }
+
+        copyText(text);
+
+        document
+            .getElementById("hostSignalStatus")
+            .textContent =
+            "응답 코드를 복사했습니다.";
+
+    };
+
+
+document
+    .getElementById("copyAnswer")
+    .onclick =
+    () => {
+
+        const text =
+            document
+                .getElementById("guestAnswer")
+                .value
+                .trim();
+
+        if(!text){
+
+            document
+                .getElementById("guestSignalStatus")
+                .textContent =
+                "먼저 응답 코드를 만들어 주세요.";
+
+            return;
+
+        }
+
+        copyText(text);
+
+        document
+            .getElementById("guestSignalStatus")
+            .textContent =
+            "응답 코드를 복사했습니다.";
+
+    };
+
+
+/* =========================================================
+HOST CONNECT ANSWER
+========================================================= */
+
+document
+    .getElementById("connectGuest")
+    .onclick =
+    async () => {
+
+        const text =
+            document
+                .getElementById("hostAnswer")
+                .value
+                .trim();
+
+        if(!text){
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "참가자의 응답 코드를 붙여넣어 주세요.";
+
+            return;
+
+        }
+
+        try{
+
+            const answer =
+                decode(text);
+
+            let target = null;
+
+            for(
+                const connection
+                of connections.values()
+            ){
+
+                if(
+                    connection.pending &&
+                    connection.pc
+                ){
+
+                    target =
+                        connection;
+
+                    break;
+
+                }
+
+            }
+
+            if(!target){
+
+                document
+                    .getElementById("hostSignalStatus")
+                    .textContent =
+                    "연결할 대기 중인 참가자가 없습니다.";
+
+                return;
+
+            }
+
+            await target.pc.setRemoteDescription(
+                answer
+            );
+
+            target.pending =
+                false;
+
+            document
+                .getElementById("hostAnswer")
+                .value = "";
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "참가자 연결을 완료했습니다.";
+
+        }catch(error){
+
+            console.error(error);
+
+            document
+                .getElementById("hostSignalStatus")
+                .textContent =
+                "응답 코드가 올바르지 않습니다.";
+
+        }
+
+    };
+
+
+/* =========================================================
+DATA CHANNEL
+========================================================= */
+
+function setupChannel(
+    channel,
+    pc,
+    hostSide
+){
+
+    channel.onopen = () => {
+
+        channel._openedAt =
+            Date.now();
+
+        if(hostSide){
+
+            channel._hostSide =
+                true;
+
+            const connectionId =
+                pc._connectionId ||
+                crypto.randomUUID();
+
+            channel._connectionId =
+                connectionId;
+
+            connections.set(
+                connectionId,
+                {
+                    pc,
+                    channel,
+                    pending:false
+                }
+            );
+
+            send(
+                channel,
+                {
+                    type:"welcome",
+                    hostId:myId,
+                    topic,
+                    maxPlayers,
+                    players
+                }
+            );
+
+        }else{
+
+            connections.set(
+                "host",
+                {
+                    pc,
+                    channel,
+                    pending:false
+                }
+            );
+
+            send(
+                channel,
+                {
+                    type:"join",
+                    id:myId,
+                    name:myName
+                }
+            );
+
+        }
+
+    };
+
+
+    channel.onmessage =
+        event => {
+
+            try{
+
+                handleMessage(
+                    channel,
+                    JSON.parse(
+                        event.data
+                    )
+                );
+
+            }catch(error){
+
+                console.error(
+                    "메시지 처리 오류:",
+                    error
+                );
+
+            }
+
+        };
+
+
+    channel.onclose = () => {
+
+        console.log(
+            "P2P 연결이 종료되었습니다."
+        );
+
+    };
+
+}
+
+
+/* =========================================================
+SEND
+========================================================= */
+
+function send(
+    channel,
+    data
+){
+
+    if(
+        channel &&
+        channel.readyState ===
+        "open"
+    ){
+
+        channel.send(
+            JSON.stringify(data)
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+BROADCAST
+========================================================= */
+
+function broadcast(data){
+
+    connections.forEach(
+        connection => {
+
+            if(
+                connection.channel
+            ){
+
+                send(
+                    connection.channel,
+                    data
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+HOST ONLY BROADCAST
+========================================================= */
+
+function broadcastFromHost(data){
+
+    if(!isHost)
+        return;
+
+    broadcast(data);
+
+}
+
+
+/* =========================================================
+MESSAGES
+========================================================= */
+
+function handleMessage(
+    channel,
+    msg
+){
+
+    switch(msg.type){
+
+        case "welcome":
+
+            topic =
+                msg.topic;
+
+            maxPlayers =
+                msg.maxPlayers;
+
+            players =
+                msg.players || [];
+
+            updateLobby();
+
+            showScreen(
+                "lobby"
+            );
+
+            break;
+
+
+        case "join":
+
+            if(!isHost)
+                break;
+
+            if(
+                players.length >=
+                maxPlayers
+            ){
+
+                send(
+                    channel,
+                    {
+                        type:"roomFull"
+                    }
+                );
+
+                return;
+
+            }
+
+            if(
+                players.some(
+                    p =>
+                    p.id === msg.id
+                )
+            ){
+
+                break;
+
+            }
+
+            players.push({
+
+                id:msg.id,
+
+                name:
+                    msg.name,
+
+                host:false
+
+            });
+
+            updateLobby();
+
+            broadcast({
+
+                type:"players",
+
+                players
+
+            });
+
+            break;
+
+
+        case "roomFull":
+
+            document
+                .getElementById("guestSignalStatus")
+                .textContent =
+                "이 방은 이미 설정된 인원이 모두 참가했습니다.";
+
+            break;
+
+
+        case "players":
+
+            players =
+                msg.players;
+
+            updateLobby();
+
+            break;
+
+
+        case "gameStart":
+
+            currentTurn =
+                msg.turn;
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        case "drawing":
+
+            drawings[
+                msg.playerIndex
+            ] =
+                msg.image;
+
+            break;
+
+
+        case "act":
+
+            audios[
+                msg.playerIndex
+            ] =
+                msg.audio;
+
+            break;
+
+
+        case "turn":
+
+            currentTurn =
+                msg.turn;
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        case "finished":
+
+            drawings =
+                msg.drawings ||
+                {};
+
+            audios =
+                msg.audios ||
+                {};
+
+            showResult();
+
+            break;
+
+
+        /* =================================================
+           VOTING
+        ================================================= */
+
+        case "voteRequest":
+
+            if(!isHost)
+                break;
+
+            if(voteEnded)
+                break;
+
+            if(!msg.voterId)
+                break;
+
+            if(
+                !Number.isInteger(
+                    msg.scene
+                )
+            )
+                break;
+
+            if(
+                msg.scene < 0 ||
+                msg.scene >= players.length
+            )
+                break;
+
+            if(
+                players[msg.scene] &&
+                players[msg.scene].id ===
+                msg.voterId
+            )
+                break;
+
+            if(
+                voteVoters[msg.voterId]
+                !== undefined
+            )
+                break;
+
+            voteVoters[
+                msg.voterId
+            ] =
+                msg.scene;
+
+            votes[
+                msg.scene
+            ] =
+                (votes[msg.scene] || 0) +
+                1;
+
+            broadcast({
+
+                type:"voteAccepted",
+
+                voterId:
+                    msg.voterId,
+
+                scene:
+                    msg.scene,
+
+                votes:
+                    votes
+
+            });
+
+            renderVotes();
+
+            checkVoteFinished();
+
+            break;
+
+
+        case "voteAccepted":
+
+            votes =
+                msg.votes ||
+                {};
+
+            if(
+                msg.voterId ===
+                myId
+            ){
+
+                myVote =
+                    msg.scene;
+
+            }
+
+            renderVotes();
+
+            break;
+
+
+        case "voteEnd":
+
+            voteEnded =
+                true;
+
+            clearInterval(
+                voteTimer
+            );
+
+            votes =
+                msg.votes ||
+                {};
+
+            showWinner();
+
+            break;
+
+    }
+
+}
+
+
+/* =========================================================
+LOBBY
+========================================================= */
+
+function updateLobby(){
+
+    const list =
+        document.getElementById(
+            "players"
+        );
+
+    list.innerHTML = "";
+
+    players.forEach(
+        p => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "player";
+
+            div.textContent =
+                p.name +
+                (
+                    p.host
+                        ? " 👑"
+                        : ""
+                );
+
+            list.appendChild(
+                div
+            );
+
+        }
+    );
+
+
+    document
+        .getElementById(
+            "playerStatus"
+        )
+        .textContent =
+        `${players.length} / ${maxPlayers}명 참가`;
+
+    document
+        .getElementById(
+            "lobbyRoomCode"
+        )
+        .textContent =
+        roomCode;
+
+    document
+        .getElementById(
+            "lobbyTopic"
+        )
+        .textContent =
+        topic;
+
+}
+
+
+/* =========================================================
+START GAME
+========================================================= */
+
+document
+    .getElementById("startGame")
+    .onclick =
+    () => {
+
+        if(!isHost)
+            return;
+
+        if(
+            players.length < 2
+        ){
+
+            document
+                .getElementById(
+                    "lobbyStatus"
+                )
+                .textContent =
+                "최소 2명이 필요합니다.";
+
+            return;
+
+        }
+
+        if(
+            players.length <
+            maxPlayers
+        ){
+
+            const proceed =
+                confirm(
+                    `현재 ${players.length}명이 참가했습니다. 게임을 시작하시겠습니까?`
+                );
+
+            if(!proceed)
+                return;
+
+        }
+
+        currentTurn = 0;
+
+        drawings = {};
+
+        audios = {};
+
+        broadcast({
+
+            type:"gameStart",
+
+            turn:currentTurn,
+
+            previous:null
+
+        });
+
+        startTurn(
+            null
+        );
+
+    };
+
+
+/* =========================================================
+START TURN
+========================================================= */
+
+function startTurn(
+    previous
+){
+
+    const player =
+        players[currentTurn];
+
+    if(!player){
+
+        finishGame();
+
+        return;
+
+    }
+
+
+    if(
+        player.id ===
+        myId
+    ){
+
+        showDraw(
+            previous
+        );
+
+    }else{
+
+        showScreen(
+            "waiting"
+        );
+
+        document
+            .getElementById(
+                "waitingTitle"
+            )
+            .textContent =
+            `${player.name}님의 차례입니다.`;
+
+        document
+            .getElementById(
+                "waitingText"
+            )
+            .textContent =
+            "그림을 그리고 녹음하는 동안 잠시 기다려 주세요.";
+
+    }
+
+}
+
+
+/* =========================================================
+DRAW CANVAS
+========================================================= */
+
+const drawCanvas =
+    document.getElementById(
+        "drawCanvas"
+    );
+
+const drawCtx =
+    drawCanvas.getContext(
+        "2d"
+    );
+
+let drawingNow = false;
+
+
+function clearDraw(){
+
+    drawCtx.fillStyle =
+        "#ffffff";
+
+    drawCtx.fillRect(
+        0,
+        0,
+        drawCanvas.width,
+        drawCanvas.height
+    );
+
+}
+
+clearDraw();
+
+
+function pointerPosition(
+    event
+){
+
+    const rect =
+        drawCanvas.getBoundingClientRect();
+
+    const source =
+        event.touches
+            ? event.touches[0]
+            : event;
+
+    return {
+
+        x:
+            (source.clientX -
+            rect.left) *
+            drawCanvas.width /
+            rect.width,
+
+        y:
+            (source.clientY -
+            rect.top) *
+            drawCanvas.height /
+            rect.height
+
+    };
+
+}
+
+
+function startDraw(
+    event
+){
+
+    event.preventDefault();
+
+    drawingNow = true;
+
+    const p =
+        pointerPosition(
+            event
+        );
+
+    drawCtx.beginPath();
+
+    drawCtx.moveTo(
+        p.x,
+        p.y
+    );
+
+}
+
+
+function moveDraw(
+    event
+){
+
+    if(!drawingNow)
+        return;
+
+    event.preventDefault();
+
+    const p =
+        pointerPosition(
+            event
+        );
+
+    drawCtx.strokeStyle =
+        document
+            .getElementById(
+                "colorPicker"
+            )
+            .value;
+
+    drawCtx.lineWidth =
+        Number(
+            document
+                .getElementById(
+                    "brushSize"
+                )
+                .value
+        );
+
+    drawCtx.lineCap =
+        "round";
+
+    drawCtx.lineJoin =
+        "round";
+
+    drawCtx.lineTo(
+        p.x,
+        p.y
+    );
+
+    drawCtx.stroke();
+
+}
+
+
+drawCanvas.addEventListener(
+    "mousedown",
+    startDraw
+);
+
+drawCanvas.addEventListener(
+    "mousemove",
+    moveDraw
+);
+
+drawCanvas.addEventListener(
+    "mouseup",
+    () => drawingNow = false
+);
+
+drawCanvas.addEventListener(
+    "mouseleave",
+    () => drawingNow = false
+);
+
+drawCanvas.addEventListener(
+    "touchstart",
+    startDraw,
+    {passive:false}
+);
+
+drawCanvas.addEventListener(
+    "touchmove",
+    moveDraw,
+    {passive:false}
+);
+
+drawCanvas.addEventListener(
+    "touchend",
+    () => drawingNow = false
+);
+
+
+document
+    .getElementById(
+        "clearCanvas"
+    )
+    .onclick =
+    clearDraw;
+
+
+/* =========================================================
+DRAW SCREEN
+========================================================= */
+
+function showDraw(
+    previous
+){
+
+    showScreen(
+        "draw"
+    );
+
+    clearDraw();
+
+    document
+        .getElementById(
+            "drawTopic"
+        )
+        .textContent =
+        topic;
+
+
+    const previousCard =
+        document.getElementById(
+            "previousCard"
+        );
+
+
+    if(previous){
+
+        previousCard
+            .classList
+            .remove("hidden");
+
+        const canvas =
+            document.getElementById(
+                "previousCanvas"
+            );
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        const img =
+            new Image();
+
+        img.onload = () => {
+
+            ctx.clearRect(
+                0,
+                0,
+                800,
+                600
+            );
+
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                800,
+                600
+            );
+
+        };
+
+        img.src =
+            previous;
+
+    }else{
+
+        previousCard
+            .classList
+            .add("hidden");
+
+    }
+
+    startDrawTimer();
+
+}
+
+
+/* =========================================================
+DRAW TIMER
+========================================================= */
+
+function startDrawTimer(){
+
+    clearInterval(
+        drawInterval
+    );
+
+    let remaining = 30;
+
+    document
+        .getElementById(
+            "drawTimer"
+        )
+        .textContent =
+        remaining;
+
+
+    drawInterval =
+        setInterval(
+            () => {
+
+                remaining--;
+
+                document
+                    .getElementById(
+                        "drawTimer"
+                    )
+                    .textContent =
+                    remaining;
+
+                if(
+                    remaining <= 0
+                ){
+
+                    clearInterval(
+                        drawInterval
+                    );
+
+                    submitDrawing();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+SUBMIT DRAWING
+========================================================= */
+
+document
+    .getElementById(
+        "submitDrawing"
+    )
+    .onclick =
+    submitDrawing;
+
+
+function submitDrawing(){
+
+    clearInterval(
+        drawInterval
+    );
+
+    const image =
+        drawCanvas.toDataURL(
+            "image/webp",
+            .65
+        );
+
+    drawings[
+        currentTurn
+    ] =
+        image;
+
+
+    broadcast({
+
+        type:"drawing",
+
+        playerIndex:
+            currentTurn,
+
+        image
+
+    });
+
+
+    showAct(
+        image
+    );
+
+}
+
+
+/* =========================================================
+ACT
+========================================================= */
+
+function showAct(
+    image
+){
+
+    showScreen(
+        "act"
+    );
+
+    document
+        .getElementById(
+            "actTopic"
+        )
+        .textContent =
+        topic;
+
+
+    const canvas =
+        document.getElementById(
+            "actCanvas"
+        );
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+    const img =
+        new Image();
+
+    img.onload = () => {
+
+        ctx.clearRect(
+            0,
+            0,
+            800,
+            600
+        );
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            800,
+            600
+        );
+
+    };
+
+    img.src =
+        image;
+
+}
+
+
+/* =========================================================
+RECORD
+========================================================= */
+
+document
+    .getElementById(
+        "recordButton"
+    )
+    .onclick =
+    startRecording;
+
+
+async function startRecording(){
+
+    if(
+        mediaRecorder &&
+        mediaRecorder.state ===
+        "recording"
+    ){
+
+        stopRecording();
+
+        return;
+
+    }
+
+
+    try{
+
+        const stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio:true
+                });
+
+
+        recordedChunks = [];
+
+
+        let mimeType =
+            "audio/webm";
+
+        if(
+            !MediaRecorder.isTypeSupported(
+                mimeType
+            )
+        ){
+
+            mimeType =
+                "";
+
+        }
+
+
+        mediaRecorder =
+            new MediaRecorder(
+                stream,
+                mimeType
+                    ? {mimeType}
+                    : undefined
+            );
+
+
+        mediaRecorder.ondataavailable =
+            event => {
+
+                if(
+                    event.data.size
+                ){
+
+                    recordedChunks.push(
+                        event.data
+                    );
+
+                }
+
+            };
+
+
+        mediaRecorder.onstop =
+            () => {
+
+                const blob =
+                    new Blob(
+                        recordedChunks,
+                        {
+                            type:
+                                "audio/webm"
+                        }
+                    );
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onloadend =
+                    () => {
+
+                        audios[
+                            currentTurn
+                        ] =
+                            reader.result;
+
+
+                        broadcast({
+
+                            type:"act",
+
+                            playerIndex:
+                                currentTurn,
+
+                            audio:
+                                reader.result
+
+                        });
+
+
+                        document
+                            .getElementById(
+                                "recordStatus"
+                            )
+                            .textContent =
+                            "녹음이 완료되었습니다.";
+
+                        nextTurn();
+
+                    };
+
+
+                reader.readAsDataURL(
+                    blob
+                );
+
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                        track.stop()
+                    );
+
+            };
+
+
+        mediaRecorder.start();
+
+
+        document
+            .getElementById(
+                "recordButton"
+            )
+            .textContent =
+            "⏹ 녹음 종료";
+
+
+        startRecordTimer();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "마이크 사용 권한이 필요합니다."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+RECORD TIMER
+========================================================= */
+
+function startRecordTimer(){
+
+    clearInterval(
+        recordInterval
+    );
+
+    let remaining = 15;
+
+    document
+        .getElementById(
+            "recordTimer"
+        )
+        .textContent =
+        remaining;
+
+
+    recordInterval =
+        setInterval(
+            () => {
+
+                remaining--;
+
+                document
+                    .getElementById(
+                        "recordTimer"
+                    )
+                    .textContent =
+                    remaining;
+
+                if(
+                    remaining <= 0
+                ){
+
+                    stopRecording();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+STOP RECORDING
+========================================================= */
+
+function stopRecording(){
+
+    clearInterval(
+        recordInterval
+    );
+
+    document
+        .getElementById(
+            "recordButton"
+        )
+        .textContent =
+        "🎙️ 녹음 시작";
+
+    if(
+        mediaRecorder &&
+        mediaRecorder.state ===
+        "recording"
+    ){
+
+        mediaRecorder.stop();
+
+    }
+
+}
+
+
+/* =========================================================
+NEXT TURN
+========================================================= */
+
+function nextTurn(){
+
+    currentTurn++;
+
+
+    if(
+        currentTurn >=
+        players.length
+    ){
+
+        finishGame();
+
+        return;
+
+    }
+
+
+    const previous =
+        drawings[
+            currentTurn - 1
+        ];
+
+
+    if(isHost){
+
+        broadcast({
+
+            type:"turn",
+
+            turn:
+                currentTurn,
+
+            previous
+
+        });
+
+    }else{
+
+        sendToHost({
+
+            type:"turnRequest",
+
+            turn:
+                currentTurn,
+
+            previous
+
+        });
+
+    }
+
+
+    startTurn(
+        previous
+    );
+
+}
+
+
+/* =========================================================
+SEND TO HOST
+========================================================= */
+
+function sendToHost(data){
+
+    const host =
+        connections.get(
+            "host"
+        );
+
+    if(
+        host &&
+        host.channel
+    ){
+
+        send(
+            host.channel,
+            data
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+HOST TURN REQUEST
+========================================================= */
+
+function handleTurnRequest(
+    msg
+){
+
+    if(!isHost)
+        return;
+
+    broadcast({
+
+        type:"turn",
+
+        turn:
+            msg.turn,
+
+        previous:
+            msg.previous
+
+    });
+
+}
+
+
+/* =========================================================
+FINISH
+========================================================= */
+
+function finishGame(){
+
+    broadcast({
+
+        type:"finished",
+
+        drawings,
+
+        audios
+
+    });
+
+    showResult();
+
+}
+
+
+/* =========================================================
+RESULT
+========================================================= */
+
+function showResult(){
+
+    showScreen(
+        "result"
+    );
+
+
+    votes = {};
+
+    voteVoters = {};
+
+    myVote = null;
+
+    voteEnded = false;
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    const container =
+        document.getElementById(
+            "resultScenes"
+        );
+
+    container.innerHTML = "";
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(!drawings[i])
+            continue;
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+        card.className =
+            "card scene";
+
+        card.dataset.scene =
+            i;
+
+
+        const title =
+            document.createElement(
+                "h3"
+            );
+
+        title.textContent =
+            `Scene ${i + 1} — ${
+                players[i]
+                    ? players[i].name
+                    : "참가자"
+            }`;
+
+        card.appendChild(
+            title
+        );
+
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+        canvas.width = 800;
+
+        canvas.height = 600;
+
+        card.appendChild(
+            canvas
+        );
+
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        const img =
+            new Image();
+
+
+        img.onload = () => {
+
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                800,
+                600
+            );
+
+        };
+
+
+        img.src =
+            drawings[i];
+
+
+        if(audios[i]){
+
+            const audio =
+                document.createElement(
+                    "audio"
+                );
+
+            audio.controls =
+                true;
+
+            audio.src =
+                audios[i];
+
+            card.appendChild(
+                audio
+            );
+
+        }
+
+
+        const voteCount =
+            document.createElement(
+                "div"
+            );
+
+        voteCount.className =
+            "vote-count";
+
+        voteCount.id =
+            `votes-${i}`;
+
+        voteCount.textContent =
+            "👍 0표";
+
+        card.appendChild(
+            voteCount
+        );
+
+
+        const voteButton =
+            document.createElement(
+                "button"
+            );
+
+        voteButton.className =
+            "primary vote-button";
+
+        voteButton.dataset.scene =
+            i;
+
+        voteButton.textContent =
+            "👍 이 장면에 투표";
+
+
+        if(
+            players[i] &&
+            players[i].id ===
+            myId
+        ){
+
+            voteButton.disabled =
+                true;
+
+            voteButton.textContent =
+                "내 장면입니다.";
+
+        }
+
+
+        voteButton.onclick =
+            () => {
+
+                submitVote(i);
+
+            };
+
+
+        card.appendChild(
+            voteButton
+        );
+
+
+        container.appendChild(
+            card
+        );
+
+    }
+
+
+    const voteInfo =
+        document.createElement(
+            "div"
+        );
+
+    voteInfo.id =
+        "voteInfo";
+
+    voteInfo.className =
+        "card center";
+
+
+    voteInfo.innerHTML = `
+
+        <div class="phase">
+            VOTE
+        </div>
+
+        <h2>
+            🏆 가장 재미있었던 장면은?
+        </h2>
+
+        <p class="small">
+            한 분당 한 표만 투표할 수 있습니다.
+        </p>
+
+        <div
+            id="voteTimer"
+            style="
+                font-size:48px;
+                font-weight:1000;
+                margin:10px;
+            "
+        >
+            15
+        </div>
+
+        <div
+            id="winnerBox"
+            class="hidden"
+        ></div>
+
+    `;
+
+
+    container.appendChild(
+        voteInfo
+    );
+
+
+    if(isHost){
+
+        const endButton =
+            document.createElement(
+                "button"
+            );
+
+        endButton.className =
+            "secondary";
+
+        endButton.textContent =
+            "🏁 투표 종료";
+
+        endButton.style.width =
+            "100%";
+
+        endButton.onclick =
+            endVoting;
+
+        voteInfo.appendChild(
+            endButton
+        );
+
+    }
+
+
+    startVoteTimer();
+
+}
+
+
+/* =========================================================
+SUBMIT VOTE
+========================================================= */
+
+function submitVote(
+    scene
+){
+
+    if(voteEnded)
+        return;
+
+
+    if(myVote !== null){
+
+        alert(
+            "투표는 한 번만 할 수 있습니다."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        players[scene] &&
+        players[scene].id ===
+        myId
+    ){
+
+        return;
+
+    }
+
+
+    if(isHost){
+
+        voteVoters[myId] =
+            scene;
+
+        votes[scene] =
+            (votes[scene] || 0) +
+            1;
+
+        myVote =
+            scene;
+
+
+        broadcast({
+
+            type:"voteAccepted",
+
+            voterId:
+                myId,
+
+            scene:
+                scene,
+
+            votes:
+                votes
+
+        });
+
+
+        renderVotes();
+
+        checkVoteFinished();
+
+    }else{
+
+        sendToHost({
+
+            type:"voteRequest",
+
+            voterId:
+                myId,
+
+            scene:
+                scene
+
+        });
+
+    }
+
+}
+
+
+/* =========================================================
+RENDER VOTES
+========================================================= */
+
+function renderVotes(){
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        const element =
+            document.getElementById(
+                `votes-${i}`
+            );
+
+        if(element){
+
+            element.textContent =
+                `👍 ${votes[i] || 0}표`;
+
+        }
+
+    }
+
+
+    document
+        .querySelectorAll(
+            ".vote-button"
+        )
+        .forEach(
+            button => {
+
+                const scene =
+                    Number(
+                        button.dataset.scene
+                    );
+
+
+                if(
+                    myVote !== null &&
+                    scene !== myVote
+                ){
+
+                    button.disabled =
+                        true;
+
+                }
+
+
+                if(
+                    myVote === scene
+                ){
+
+                    button.disabled =
+                        true;
+
+                    button.textContent =
+                        "✓ 투표했습니다.";
+
+                }
+
+
+                if(voteEnded){
+
+                    button.disabled =
+                        true;
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+VOTE TIMER
+========================================================= */
+
+function startVoteTimer(){
+
+    clearInterval(
+        voteTimer
+    );
+
+    let remaining = 15;
+
+
+    const timer =
+        document.getElementById(
+            "voteTimer"
+        );
+
+
+    if(timer){
+
+        timer.textContent =
+            remaining;
+
+    }
+
+
+    voteTimer =
+        setInterval(
+            () => {
+
+                remaining--;
+
+
+                const currentTimer =
+                    document.getElementById(
+                        "voteTimer"
+                    );
+
+
+                if(currentTimer){
+
+                    currentTimer.textContent =
+                        remaining;
+
+                }
+
+
+                if(
+                    remaining <= 0
+                ){
+
+                    clearInterval(
+                        voteTimer
+                    );
+
+                    if(isHost){
+
+                        endVoting();
+
+                    }
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+CHECK VOTE
+========================================================= */
+
+function checkVoteFinished(){
+
+    if(!isHost)
+        return;
+
+
+    const voterCount =
+        Object.keys(
+            voteVoters
+        ).length;
+
+
+    if(
+        voterCount >=
+        players.length
+    ){
+
+        endVoting();
+
+    }
+
+}
+
+
+/* =========================================================
+END VOTING
+========================================================= */
+
+function endVoting(){
+
+    if(!isHost)
+        return;
+
+    if(voteEnded)
+        return;
+
+
+    voteEnded =
+        true;
+
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    broadcast({
+
+        type:"voteEnd",
+
+        votes:
+            votes
+
+    });
+
+
+    showWinner();
+
+}
+
+
+/* =========================================================
+WINNER
+========================================================= */
+
+function showWinner(){
+
+    voteEnded =
+        true;
+
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    let highest = 0;
+
+
+    Object.values(
+        votes
+    ).forEach(
+        count => {
+
+            highest =
+                Math.max(
+                    highest,
+                    count
+                );
+
+        }
+    );
+
+
+    const winners = [];
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(
+            (votes[i] || 0) ===
+            highest &&
+            highest > 0
+        ){
+
+            winners.push(
+                i
+            );
+
+        }
+
+    }
+
+
+    const box =
+        document.getElementById(
+            "winnerBox"
+        );
+
+
+    if(!box)
+        return;
+
+
+    box.classList.remove(
+        "hidden"
+    );
+
+
+    if(highest === 0){
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:40px;
+                margin-bottom:8px;
+            ">
+                🤷
+            </div>
+
+            <h2>
+                아직 득표한 장면이 없습니다.
+            </h2>
+
+        `;
+
+        return;
+
+    }
+
+
+    if(winners.length > 1){
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:45px;
+                margin-bottom:8px;
+            ">
+                🏆
+            </div>
+
+            <h2>
+                공동 우승입니다!
+            </h2>
+
+            <p>
+                ${winners
+                    .map(
+                        i =>
+                        `<strong>${
+                            players[i]?.name ||
+                            `Scene ${i+1}`
+                        }</strong>`
+                    )
+                    .join(" · ")
+                }
+            </p>
+
+            <p class="small">
+                ${highest}표를 획득했습니다.
+            </p>
+
+        `;
+
+    }else{
+
+        const winner =
+            winners[0];
+
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:60px;
+                margin-bottom:4px;
+            ">
+                🏆
+            </div>
+
+            <h2>
+                ${
+                    players[winner]?.name ||
+                    `Scene ${winner + 1}`
+                }님의 장면이 우승했습니다!
+            </h2>
+
+            <p style="
+                font-size:24px;
+                font-weight:1000;
+            ">
+                ${highest}표
+            </p>
+
+            <p class="small">
+                🎉 최다 득표를 차지했습니다!
+            </p>
+
+        `;
+
+    }
+
+
+    winners.forEach(
+        index => {
+
+            const card =
+                document.querySelector(
+                    `.scene[data-scene="${index}"]`
+                );
+
+            if(card){
+
+                card.classList.add(
+                    "winner"
+                );
+
+                const badge =
+                    document.createElement(
+                        "div"
+                    );
+
+                badge.className =
+                    "winner-badge";
+
+                badge.textContent =
+                    "🏆 최다 득표";
+
+                card.insertBefore(
+                    badge,
+                    card.firstChild
+                );
+
+            }
+
+        }
+    );
+
+
+    document
+        .querySelectorAll(
+            ".vote-button"
+        )
+        .forEach(
+            button => {
+
+                button.disabled =
+                    true;
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+PLAY ALL
+========================================================= */
+
+document
+    .getElementById(
+        "playAll"
+    )
+    .onclick =
+    async () => {
+
+        const audioElements =
+            document.querySelectorAll(
+                "#resultScenes audio"
+            );
+
+
+        for(
+            const audio
+            of audioElements
+        ){
+
+            audio.currentTime =
+                0;
+
+            try{
+
+                await audio.play();
+
+            }catch{
+
+            }
+
+
+            await new Promise(
+                resolve => {
+
+                    audio.onended =
+                        resolve;
+
+                }
+            );
+
+        }
+
+    };
+
+
+/* =========================================================
+EXPORT WEBM
+========================================================= */
+
+document
+    .getElementById(
+        "exportVideo"
+    )
+    .onclick =
+    exportWebM;
+
+
+async function exportWebM(){
+
+    if(
+        !Object.keys(
+            drawings
+        ).length
+    ){
+
+        document
+            .getElementById(
+                "resultStatus"
+            )
+            .textContent =
+            "저장할 그림이 없습니다.";
+
+        return;
+
+    }
+
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width =
+        800;
+
+    canvas.height =
+        600;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const stream =
+        canvas.captureStream(
+            30
+        );
+
+
+    let mimeType =
+        "video/webm";
+
+
+    if(
+        !MediaRecorder.isTypeSupported(
+            mimeType
+        )
+    ){
+
+        mimeType =
+            "";
+
+    }
+
+
+    const recorder =
+        new MediaRecorder(
+            stream,
+            mimeType
+                ? {mimeType}
+                : undefined
+        );
+
+
+    const chunks = [];
+
+
+    recorder.ondataavailable =
+        event => {
+
+            if(
+                event.data.size
+            ){
+
+                chunks.push(
+                    event.data
+                );
+
+            }
+
+        };
+
+
+    recorder.onstop =
+        () => {
+
+            const blob =
+                new Blob(
+                    chunks,
+                    {
+                        type:
+                            "video/webm"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const a =
+                document.createElement(
+                    "a"
+                );
+
+
+            a.href =
+                url;
+
+            a.download =
+                "draw-and-act.webm";
+
+            a.click();
+
+
+            setTimeout(
+                () =>
+                URL.revokeObjectURL(
+                    url
+                ),
+                1000
+            );
+
+
+            document
+                .getElementById(
+                    "resultStatus"
+                )
+                .textContent =
+                "WebM 저장이 완료되었습니다.";
+
+        };
+
+
+    recorder.start();
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(!drawings[i])
+            continue;
+
+
+        const img =
+            new Image();
+
+
+        await new Promise(
+            resolve => {
+
+                img.onload =
+                    resolve;
+
+                img.src =
+                    drawings[i];
+
+            }
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+        ctx.fillRect(
+            0,
+            0,
+            800,
+            600
+        );
+
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            800,
+            600
+        );
+
+
+        await new Promise(
+            resolve =>
+            setTimeout(
+                resolve,
+                2000
+            )
+        );
+
+    }
+
+
+    recorder.stop();
+
+}
+
+
+/* =========================================================
+HOST LOBBY BUTTON
+========================================================= */
+
+document
+    .getElementById(
+        "hostLobbyButton"
+    )
+    .onclick =
+    () => {
+
+        updateLobby();
+
+        showScreen(
+            "lobby"
+        );
+
+    };
+
+
+/* =========================================================
+INITIAL
+========================================================= */
+
+if(urlRoom){
+
+    document
+        .getElementById(
+            "homeStatus"
+        )
+        .textContent =
+        `방 ${urlRoom.toUpperCase()}에 참가할 준비가 되었습니다.`;
+
+}
+
+
+/* =========================================================
+PATCH: TURN REQUEST
+========================================================= */
+
+const originalHandleMessage =
+    handleMessage;
+
+
+/*
+ * 기존 메시지 처리에 turnRequest만 추가합니다.
+ */
+handleMessage =
+    function(channel,msg){
+
+        if(
+            msg.type ===
+            "turnRequest"
+        ){
+
+            handleTurnRequest(
+                msg
+            );
+
+            return;
+
+        }
+
+        originalHandleMessage(
+            channel,
+            msg
+        );
+
+    };
+
+</script>
+
+</body>
+</html>
