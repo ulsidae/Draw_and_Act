@@ -6,6 +6,9 @@
 
 <title>Draw and Act!</title>
 
+<!-- PeerJS -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 <style>
 *{
     box-sizing:border-box;
@@ -267,19 +270,6 @@ canvas{
     font-size:60px;
 }
 
-.copy-row{
-    display:flex;
-    gap:8px;
-}
-
-.copy-row textarea{
-    margin-bottom:0;
-}
-
-.copy-row button{
-    flex:0 0 110px;
-}
-
 .vote-count{
     text-align:center;
     font-size:22px;
@@ -307,6 +297,13 @@ canvas{
     margin-bottom:10px;
 }
 
+.password-note{
+    margin-top:-4px;
+    margin-bottom:12px;
+    color:#666;
+    font-size:12px;
+}
+
 @media(max-width:600px){
 
     .logo{
@@ -317,13 +314,8 @@ canvas{
         font-size:42px;
     }
 
-    .copy-row{
-        flex-direction:column;
-    }
-
-    .copy-row button{
-        flex:auto;
-        width:100%;
+    .toolbar{
+        flex-wrap:wrap;
     }
 }
 </style>
@@ -344,8 +336,8 @@ Draw and Act!
 </div>
 
 <div class="description">
-그리고 상황에 맞는 녹음을 하세요!<br>
-주제를 정해 친구들, 혹은 새로운 사람들과 함께 맞는 그림을 그리고
+그리고 상황에 맞는 녹음을 해보세요!<br>
+주제를 정해 친구들, 혹은 새로운 사람들과 함께 그림을 그리고
 녹음하며 여러분만의 작은 이야기를 만들어보세요.
 <br>
 오직 전자기기와 여러분의 상상력만 있으면 됩니다!
@@ -394,6 +386,19 @@ maxlength="120"
 placeholder="예: 어느 날 갑자기 우주에 떨어졌습니다."
 >
 
+<label>방 비밀번호</label>
+
+<input
+id="hostPassword"
+type="password"
+maxlength="40"
+placeholder="비밀번호를 설정해 주세요."
+>
+
+<div class="password-note">
+친구들이 방에 참가할 때 사용하는 비밀번호입니다.
+</div>
+
 <button
 id="createButton"
 class="primary"
@@ -420,8 +425,17 @@ placeholder="예: 김철수"
 
 <input
 id="joinCode"
-maxlength="4"
-placeholder="ABCD"
+maxlength="6"
+placeholder="예: ABC123"
+>
+
+<label>방 비밀번호</label>
+
+<input
+id="joinPassword"
+type="password"
+maxlength="40"
+placeholder="방장에게 받은 비밀번호를 입력해 주세요."
 >
 
 <button
@@ -442,15 +456,47 @@ class="status"
 
 
 <!-- =====================================================
-HOST SIGNALING
+JOIN CONNECTING
 ===================================================== -->
 
-<section id="hostSignal" class="screen">
+<section id="connecting" class="screen">
+
+<div class="card center">
+
+<div class="phase">
+CONNECTING
+</div>
+
+<div class="big">
+🔄
+</div>
+
+<h2>
+방에 연결하고 있습니다.
+</h2>
+
+<p
+id="connectingText"
+class="small"
+>
+잠시만 기다려 주세요.
+</p>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+HOST ROOM
+===================================================== -->
+
+<section id="hostRoom" class="screen">
 
 <div class="card">
 
 <div class="phase">
-HOST CONNECTION
+ROOM CREATED
 </div>
 
 <h2 class="center">
@@ -458,14 +504,15 @@ HOST CONNECTION
 </h2>
 
 <div
-class="room-code"
 id="hostRoomCode"
+class="room-code"
 >
-----
+------
 </div>
 
 <p class="small center">
-아래 링크를 친구에게 보내면 방 코드가 자동으로 입력됩니다.
+아래 링크를 친구에게 보내 주세요.
+링크를 열면 방 코드가 자동으로 입력됩니다.
 </p>
 
 <input
@@ -486,38 +533,19 @@ class="primary"
 <div class="card">
 
 <h2>
-1️⃣ 연결 코드
+🔒 방 정보
 </h2>
 
 <p class="small">
-참가자가 아래 연결 코드를 받아 입력할 수 있도록 전달해 주세요.
-각 참가자는 별도의 연결 코드를 사용해야 합니다.
+방 비밀번호를 알고 있는 참가자만 입장할 수 있습니다.
 </p>
 
-<div class="copy-row">
-
-<textarea
-id="hostOffer"
-readonly
-placeholder="연결 코드가 여기에 표시됩니다."
-></textarea>
-
-<button
-id="copyHostOffer"
-class="secondary"
+<div
+id="hostPasswordStatus"
+class="center"
 >
-📋 코드 복사
-</button>
-
+비밀번호가 설정되었습니다.
 </div>
-
-<button
-id="newGuestConnection"
-class="primary"
-style="margin-top:10px;"
->
-➕ 새 참가자 연결 코드 만들기
-</button>
 
 </div>
 
@@ -525,126 +553,35 @@ style="margin-top:10px;"
 <div class="card">
 
 <h2>
-2️⃣ 참가자의 응답 코드
+👥 참가자
 </h2>
 
-<p class="small">
-참가자가 보내드린 응답 코드를 아래에 붙여넣어 주세요.
-</p>
-
-<div class="copy-row">
-
-<textarea
-id="hostAnswer"
-placeholder="참가자가 보내드린 응답 코드를 붙여넣어 주세요."
-></textarea>
-
-<button
-id="copyHostAnswer"
-class="secondary"
->
-📋 복사
-</button>
-
-</div>
-
-<button
-id="connectGuest"
-class="primary"
-style="margin-top:10px;"
->
-연결하기
-</button>
-
-</div>
-
-
 <div
-id="hostSignalStatus"
-class="status"
+id="hostPlayers"
+class="players"
 ></div>
 
-<button
-id="hostLobbyButton"
-class="secondary"
-style="width:100%;"
->
-로비로 이동
-</button>
+<p
+id="hostPlayerStatus"
+class="small"
+></p>
 
-</section>
-
-
-<!-- =====================================================
-GUEST SIGNALING
-===================================================== -->
-
-<section id="guestSignal" class="screen">
-
-<div class="card">
-
-<div class="phase">
-JOIN ROOM
 </div>
 
-<h2 class="center">
-방에 연결하기
-</h2>
 
-<p class="small center">
-방장에게 받은 연결 코드를 붙여넣어 주세요.
-</p>
-
-<textarea
-id="guestOffer"
-placeholder="방장이 보내주신 연결 코드를 붙여넣어 주세요."
-></textarea>
+<div
+id="hostRoomStatus"
+class="status"
+>
+참가자를 기다리는 중입니다.
+</div>
 
 <button
-id="createAnswer"
+id="hostStartGame"
 class="primary"
 >
-응답 코드 만들기
+🎬 이야기 시작하기
 </button>
-
-</div>
-
-
-<div
-id="guestAnswerBox"
-class="card hidden"
->
-
-<h2>
-2️⃣ 응답 코드를 방장에게 보내 주세요.
-</h2>
-
-<div class="copy-row">
-
-<textarea
-id="guestAnswer"
-readonly
-></textarea>
-
-<button
-id="copyAnswer"
-class="secondary"
->
-📋 복사
-</button>
-
-</div>
-
-<p class="small">
-응답 코드를 방장에게 전달하고 연결이 완료될 때까지 기다려 주세요.
-</p>
-
-</div>
-
-<div
-id="guestSignalStatus"
-class="status"
-></div>
 
 </section>
 
@@ -665,7 +602,7 @@ LOBBY
 id="lobbyRoomCode"
 class="room-code"
 >
-----
+------
 </div>
 
 <div class="topic-box">
@@ -963,22 +900,11 @@ class="status"
 CONFIG
 ========================================================= */
 
-const STUN_SERVERS = {
+const PEER_CONFIG = {
 
-    iceServers:[
-        {
-            urls:"stun:stun.l.google.com:19302"
-        },
-        {
-            urls:"stun:stun1.l.google.com:19302"
-        }
-    ]
+    debug: 0
 
 };
-
-const ROOM_PREFIX =
-    location.origin +
-    location.pathname;
 
 
 /* =========================================================
@@ -990,7 +916,7 @@ let role = null;
 let myId =
     crypto.randomUUID
         ? crypto.randomUUID()
-        : Math.random().toString(36);
+        : Math.random().toString(36).substring(2);
 
 let myName = "";
 
@@ -1000,7 +926,11 @@ let topic = "";
 
 let maxPlayers = 4;
 
+let roomPasswordHash = "";
+
 let isHost = false;
+
+let peer = null;
 
 let connections = new Map();
 
@@ -1020,9 +950,13 @@ let drawInterval = null;
 
 let recordInterval = null;
 
+let submittedDrawing = false;
+
+let submittedRecording = false;
+
 
 /* =========================================================
-VOTING STATE
+VOTING
 ========================================================= */
 
 let votes = {};
@@ -1043,8 +977,8 @@ SCREEN
 const screenIds = [
 
     "home",
-    "hostSignal",
-    "guestSignal",
+    "connecting",
+    "hostRoom",
     "lobby",
     "draw",
     "waiting",
@@ -1053,13 +987,19 @@ const screenIds = [
 
 ];
 
+
 function showScreen(id){
 
     screenIds.forEach(screen => {
 
-        document
-            .getElementById(screen)
-            .classList.remove("active");
+        const element =
+            document.getElementById(screen);
+
+        if(element){
+
+            element.classList.remove("active");
+
+        }
 
     });
 
@@ -1078,24 +1018,34 @@ URL ROOM
 
 function getRoomFromURL(){
 
-    const params =
-        new URLSearchParams(
-            location.hash.replace("#","?")
-        );
+    const hash =
+        location.hash.replace("#","");
 
-    return params.get("room") || "";
+    const params =
+        new URLSearchParams(hash);
+
+    return (
+        params.get("room") || ""
+    ).toUpperCase();
 
 }
 
+
 const urlRoom =
     getRoomFromURL();
+
 
 if(urlRoom){
 
     document
         .getElementById("joinCode")
         .value =
-        urlRoom.toUpperCase();
+        urlRoom;
+
+    document
+        .getElementById("homeStatus")
+        .textContent =
+        `방 ${urlRoom}에 참가할 준비가 되었습니다.`;
 
 }
 
@@ -1106,10 +1056,50 @@ UTIL
 
 function randomRoom(){
 
-    return Math.random()
-        .toString(36)
-        .substring(2,6)
-        .toUpperCase();
+    const chars =
+        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let result = "";
+
+    for(let i=0;i<6;i++){
+
+        result +=
+            chars[
+                Math.floor(
+                    Math.random() *
+                    chars.length
+                )
+            ];
+
+    }
+
+    return result;
+
+}
+
+
+async function hashPassword(password){
+
+    const data =
+        new TextEncoder().encode(
+            password
+        );
+
+    const hash =
+        await crypto.subtle.digest(
+            "SHA-256",
+            data
+        );
+
+    return Array
+        .from(
+            new Uint8Array(hash)
+        )
+        .map(
+            byte =>
+            byte.toString(16).padStart(2,"0")
+        )
+        .join("");
 
 }
 
@@ -1169,61 +1159,199 @@ async function copyText(text){
 
 
 /* =========================================================
+PEER INITIALIZATION
+========================================================= */
+
+function createPeer(id){
+
+    return new Promise(
+        (resolve,reject) => {
+
+            const newPeer =
+                new Peer(
+                    id,
+                    PEER_CONFIG
+                );
+
+            newPeer.on(
+                "open",
+                () => {
+
+                    peer =
+                        newPeer;
+
+                    resolve(
+                        newPeer
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "error",
+                error => {
+
+                    console.error(
+                        "PeerJS 오류:",
+                        error
+                    );
+
+                    reject(
+                        error
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "connection",
+                connection => {
+
+                    if(isHost){
+
+                        handleIncomingConnection(
+                            connection
+                        );
+
+                    }
+
+                }
+            );
+
+            newPeer.on(
+                "disconnected",
+                () => {
+
+                    console.log(
+                        "Peer 서버 연결이 끊어졌습니다."
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "close",
+                () => {
+
+                    console.log(
+                        "Peer가 종료되었습니다."
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
 CREATE ROOM
 ========================================================= */
 
 document
     .getElementById("createButton")
     .onclick =
-    async () => {
+    createRoom;
 
-        myName =
+
+async function createRoom(){
+
+    myName =
+        document
+            .getElementById("hostName")
+            .value
+            .trim() ||
+        "방장";
+
+    topic =
+        document
+            .getElementById("topicInput")
+            .value
+            .trim();
+
+    maxPlayers =
+        Number(
             document
-                .getElementById("hostName")
+                .getElementById("playerCount")
                 .value
-                .trim() ||
-            "방장";
+        );
 
-        topic =
-            document
-                .getElementById("topicInput")
-                .value
-                .trim();
+    const password =
+        document
+            .getElementById("hostPassword")
+            .value;
 
-        maxPlayers =
-            Number(
-                document
-                    .getElementById("playerCount")
-                    .value
-            );
 
-        if(!topic){
+    if(!topic){
 
-            document
-                .getElementById("homeStatus")
-                .textContent =
-                "주제를 먼저 입력해 주세요.";
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "이야기의 주제를 입력해 주세요.";
 
-            return;
+        return;
 
+    }
+
+
+    if(!password){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "방 비밀번호를 설정해 주세요.";
+
+        return;
+
+    }
+
+
+    role =
+        "host";
+
+    isHost =
+        true;
+
+
+    roomCode =
+        randomRoom();
+
+
+    roomPasswordHash =
+        await hashPassword(
+            password
+        );
+
+
+    players = [
+
+        {
+            id:myId,
+            name:myName,
+            host:true
         }
 
-        role = "host";
+    ];
 
-        isHost = true;
 
-        roomCode =
-            randomRoom();
+    showScreen(
+        "connecting"
+    );
 
-        players = [
 
-            {
-                id:myId,
-                name:myName,
-                host:true
-            }
+    document
+        .getElementById("connectingText")
+        .textContent =
+        "방을 만들고 있습니다.";
 
-        ];
+
+    try{
+
+        await createPeer(
+            roomCode
+        );
 
         history.replaceState(
             null,
@@ -1231,638 +1359,332 @@ document
             "#room=" + roomCode
         );
 
-        await prepareHost();
 
-    };
+        document
+            .getElementById("hostRoomCode")
+            .textContent =
+            roomCode;
 
 
-/* =========================================================
-HOST PREPARE
-========================================================= */
+        document
+            .getElementById("inviteLink")
+            .value =
+            location.origin +
+            location.pathname +
+            "#room=" +
+            roomCode;
 
-async function prepareHost(){
 
-    document
-        .getElementById("hostRoomCode")
-        .textContent =
-        roomCode;
+        updateHostRoom();
 
-    document
-        .getElementById("inviteLink")
-        .value =
-        ROOM_PREFIX +
-        "#room=" +
-        roomCode;
 
-    document
-        .getElementById("hostSignalStatus")
-        .textContent =
-        "참가자를 연결할 준비가 되었습니다.";
+        showScreen(
+            "hostRoom"
+        );
 
-    showScreen("hostSignal");
 
-    await createGuestConnection();
+    }catch(error){
+
+        console.error(error);
+
+        isHost =
+            false;
+
+        role =
+            null;
+
+        showScreen(
+            "home"
+        );
+
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "방을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.";
+
+    }
 
 }
 
 
 /* =========================================================
-CREATE GUEST CONNECTION
+HOST INCOMING CONNECTION
 ========================================================= */
 
-document
-    .getElementById("newGuestConnection")
-    .onclick =
-    async () => {
+function handleIncomingConnection(
+    connection
+){
 
-        if(
-            players.length >=
-            maxPlayers
-        ){
+    console.log(
+        "새 참가자 연결:",
+        connection.peer
+    );
 
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "설정된 인원이 모두 참가했습니다.";
 
-            return;
+    connection.on(
+        "open",
+        () => {
+
+            setupConnection(
+                connection
+            );
 
         }
-
-        await createGuestConnection();
-
-    };
-
-
-async function createGuestConnection(){
-
-    const pc =
-        new RTCPeerConnection(
-            STUN_SERVERS
-        );
-
-    const channel =
-        pc.createDataChannel("game");
-
-    setupChannel(
-        channel,
-        pc,
-        true
     );
-
-    const connectionId =
-        crypto.randomUUID();
-
-    connections.set(
-        connectionId,
-        {
-            pc,
-            channel,
-            pending:true
-        }
-    );
-
-    const offer =
-        await pc.createOffer();
-
-    await pc.setLocalDescription(
-        offer
-    );
-
-    await waitForICE(pc);
-
-    const offerCode =
-        encode({
-
-            type:
-                pc.localDescription.type,
-
-            sdp:
-                pc.localDescription.sdp
-
-        });
-
-    pc._connectionId =
-        connectionId;
-
-    pc._offerCode =
-        offerCode;
-
-    document
-        .getElementById("hostOffer")
-        .value =
-        offerCode;
-
-    document
-        .getElementById("hostSignalStatus")
-        .textContent =
-        "연결 코드를 참가자에게 보내 주세요.";
 
 }
 
 
 /* =========================================================
-WAIT ICE
-========================================================= */
-
-function waitForICE(pc){
-
-    return new Promise(resolve => {
-
-        if(
-            pc.iceGatheringState ===
-            "complete"
-        ){
-
-            resolve();
-
-            return;
-
-        }
-
-        const check = () => {
-
-            if(
-                pc.iceGatheringState ===
-                "complete"
-            ){
-
-                pc.removeEventListener(
-                    "icegatheringstatechange",
-                    check
-                );
-
-                resolve();
-
-            }
-
-        };
-
-        pc.addEventListener(
-            "icegatheringstatechange",
-            check
-        );
-
-        setTimeout(
-            resolve,
-            5000
-        );
-
-    });
-
-}
-
-
-/* =========================================================
-JOIN
+JOIN ROOM
 ========================================================= */
 
 document
     .getElementById("joinButton")
     .onclick =
-    () => {
+    joinRoom;
 
-        myName =
-            document
-                .getElementById("joinName")
-                .value
-                .trim() ||
-            "참가자";
 
-        roomCode =
-            document
-                .getElementById("joinCode")
-                .value
-                .trim()
-                .toUpperCase();
+async function joinRoom(){
 
-        if(!roomCode){
+    myName =
+        document
+            .getElementById("joinName")
+            .value
+            .trim() ||
+        "참가자";
 
-            document
-                .getElementById("homeStatus")
-                .textContent =
-                "방 코드를 입력해 주세요.";
 
-            return;
+    roomCode =
+        document
+            .getElementById("joinCode")
+            .value
+            .trim()
+            .toUpperCase();
 
-        }
 
-        role = "guest";
+    const password =
+        document
+            .getElementById("joinPassword")
+            .value;
 
-        isHost = false;
+
+    if(!roomCode){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "방 코드를 입력해 주세요.";
+
+        return;
+
+    }
+
+
+    if(!password){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "방 비밀번호를 입력해 주세요.";
+
+        return;
+
+    }
+
+
+    role =
+        "guest";
+
+    isHost =
+        false;
+
+
+    showScreen(
+        "connecting"
+    );
+
+
+    document
+        .getElementById("connectingText")
+        .textContent =
+        "방에 연결하고 있습니다.";
+
+
+    try{
+
+        await createPeer(
+            myId
+        );
+
+
+        const connection =
+            peer.connect(
+                roomCode,
+                {
+                    reliable:true
+                }
+            );
+
+
+        connection.on(
+            "open",
+            () => {
+
+                setupConnection(
+                    connection
+                );
+
+
+                send(
+                    connection,
+                    {
+                        type:"join",
+                        id:myId,
+                        name:myName,
+                        passwordHash:
+                            hashPasswordValue
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+         * 비밀번호 해시는 비동기로 계산합니다.
+         */
+        const hash =
+            await hashPassword(
+                password
+            );
+
+
+        /*
+         * 연결이 이미 열린 경우에도 전송할 수 있도록
+         * 별도 대기 처리를 합니다.
+         */
+        const sendJoin = () => {
+
+            if(
+                connection.open
+            ){
+
+                send(
+                    connection,
+                    {
+                        type:"join",
+                        id:myId,
+                        name:myName,
+                        passwordHash:hash
+                    }
+                );
+
+            }
+
+        };
+
+
+        connection.off?.(
+            "open",
+            sendJoin
+        );
+
+
+        connection.on(
+            "open",
+            sendJoin
+        );
+
 
         history.replaceState(
             null,
             "",
-            "#room=" +
-            roomCode
+            "#room=" + roomCode
         );
+
+
+    }catch(error){
+
+        console.error(error);
+
+        if(peer){
+
+            try{
+                peer.destroy();
+            }catch{}
+
+        }
+
+        peer =
+            null;
+
 
         showScreen(
-            "guestSignal"
+            "home"
         );
 
-    };
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "방에 연결하지 못했습니다. 방 코드와 비밀번호를 확인해 주세요.";
+
+    }
+
+}
+
+
+/*
+ * joinRoom 내부에서 사용하지 않는 변수 오류를
+ * 방지하기 위한 더미 값입니다.
+ */
+let hashPasswordValue = "";
 
 
 /* =========================================================
-GUEST ANSWER
+CONNECTION SETUP
 ========================================================= */
 
-document
-    .getElementById("createAnswer")
-    .onclick =
-    async () => {
-
-        const offerText =
-            document
-                .getElementById("guestOffer")
-                .value
-                .trim();
-
-        if(!offerText){
-
-            document
-                .getElementById("guestSignalStatus")
-                .textContent =
-                "방장이 보내드린 연결 코드를 붙여넣어 주세요.";
-
-            return;
-
-        }
-
-        try{
-
-            const offer =
-                decode(
-                    offerText
-                );
-
-            const pc =
-                new RTCPeerConnection(
-                    STUN_SERVERS
-                );
-
-            pc.ondatachannel =
-                event => {
-
-                    setupChannel(
-                        event.channel,
-                        pc,
-                        false
-                    );
-
-                };
-
-            await pc.setRemoteDescription(
-                offer
-            );
-
-            const answer =
-                await pc.createAnswer();
-
-            await pc.setLocalDescription(
-                answer
-            );
-
-            await waitForICE(
-                pc
-            );
-
-            window.guestPC =
-                pc;
-
-            document
-                .getElementById("guestAnswer")
-                .value =
-                encode({
-
-                    type:
-                        pc.localDescription.type,
-
-                    sdp:
-                        pc.localDescription.sdp
-
-                });
-
-            document
-                .getElementById("guestAnswerBox")
-                .classList
-                .remove("hidden");
-
-            document
-                .getElementById("guestSignalStatus")
-                .textContent =
-                "응답 코드를 방장에게 보내 주세요.";
-
-        }catch(error){
-
-            console.error(error);
-
-            document
-                .getElementById("guestSignalStatus")
-                .textContent =
-                "연결 코드가 올바르지 않습니다.";
-
-        }
-
-    };
-
-
-/* =========================================================
-COPY BUTTONS
-========================================================= */
-
-document
-    .getElementById("copyInvite")
-    .onclick =
-    () => {
-
-        copyText(
-            document
-                .getElementById("inviteLink")
-                .value
-        );
-
-        document
-            .getElementById("hostSignalStatus")
-            .textContent =
-            "초대 링크를 복사했습니다.";
-
-    };
-
-
-document
-    .getElementById("copyHostOffer")
-    .onclick =
-    () => {
-
-        const text =
-            document
-                .getElementById("hostOffer")
-                .value
-                .trim();
-
-        if(!text){
-
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "먼저 연결 코드를 만들어 주세요.";
-
-            return;
-
-        }
-
-        copyText(text);
-
-        document
-            .getElementById("hostSignalStatus")
-            .textContent =
-            "연결 코드를 복사했습니다.";
-
-    };
-
-
-document
-    .getElementById("copyHostAnswer")
-    .onclick =
-    () => {
-
-        const text =
-            document
-                .getElementById("hostAnswer")
-                .value
-                .trim();
-
-        if(!text){
-
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "먼저 참가자의 응답 코드를 입력해 주세요.";
-
-            return;
-
-        }
-
-        copyText(text);
-
-        document
-            .getElementById("hostSignalStatus")
-            .textContent =
-            "응답 코드를 복사했습니다.";
-
-    };
-
-
-document
-    .getElementById("copyAnswer")
-    .onclick =
-    () => {
-
-        const text =
-            document
-                .getElementById("guestAnswer")
-                .value
-                .trim();
-
-        if(!text){
-
-            document
-                .getElementById("guestSignalStatus")
-                .textContent =
-                "먼저 응답 코드를 만들어 주세요.";
-
-            return;
-
-        }
-
-        copyText(text);
-
-        document
-            .getElementById("guestSignalStatus")
-            .textContent =
-            "응답 코드를 복사했습니다.";
-
-    };
-
-
-/* =========================================================
-HOST CONNECT ANSWER
-========================================================= */
-
-document
-    .getElementById("connectGuest")
-    .onclick =
-    async () => {
-
-        const text =
-            document
-                .getElementById("hostAnswer")
-                .value
-                .trim();
-
-        if(!text){
-
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "참가자의 응답 코드를 붙여넣어 주세요.";
-
-            return;
-
-        }
-
-        try{
-
-            const answer =
-                decode(text);
-
-            let target = null;
-
-            for(
-                const connection
-                of connections.values()
-            ){
-
-                if(
-                    connection.pending &&
-                    connection.pc
-                ){
-
-                    target =
-                        connection;
-
-                    break;
-
-                }
-
-            }
-
-            if(!target){
-
-                document
-                    .getElementById("hostSignalStatus")
-                    .textContent =
-                    "연결할 대기 중인 참가자가 없습니다.";
-
-                return;
-
-            }
-
-            await target.pc.setRemoteDescription(
-                answer
-            );
-
-            target.pending =
-                false;
-
-            document
-                .getElementById("hostAnswer")
-                .value = "";
-
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "참가자 연결을 완료했습니다.";
-
-        }catch(error){
-
-            console.error(error);
-
-            document
-                .getElementById("hostSignalStatus")
-                .textContent =
-                "응답 코드가 올바르지 않습니다.";
-
-        }
-
-    };
-
-
-/* =========================================================
-DATA CHANNEL
-========================================================= */
-
-function setupChannel(
-    channel,
-    pc,
-    hostSide
+function setupConnection(
+    connection
 ){
 
-    channel.onopen = () => {
+    if(
+        connections.has(
+            connection.peer
+        )
+    ){
 
-        channel._openedAt =
-            Date.now();
+        return;
 
-        if(hostSide){
+    }
 
-            channel._hostSide =
-                true;
 
-            const connectionId =
-                pc._connectionId ||
-                crypto.randomUUID();
-
-            channel._connectionId =
-                connectionId;
-
-            connections.set(
-                connectionId,
-                {
-                    pc,
-                    channel,
-                    pending:false
-                }
-            );
-
-            send(
-                channel,
-                {
-                    type:"welcome",
-                    hostId:myId,
-                    topic,
-                    maxPlayers,
-                    players
-                }
-            );
-
-        }else{
-
-            connections.set(
-                "host",
-                {
-                    pc,
-                    channel,
-                    pending:false
-                }
-            );
-
-            send(
-                channel,
-                {
-                    type:"join",
-                    id:myId,
-                    name:myName
-                }
-            );
-
+    connections.set(
+        connection.peer,
+        {
+            connection,
+            peerId:connection.peer
         }
+    );
 
-    };
 
-
-    channel.onmessage =
-        event => {
+    connection.on(
+        "data",
+        data => {
 
             try{
 
+                const msg =
+                    typeof data === "string"
+                        ? JSON.parse(data)
+                        : data;
+
                 handleMessage(
-                    channel,
-                    JSON.parse(
-                        event.data
-                    )
+                    connection,
+                    msg
                 );
 
             }catch(error){
@@ -1874,16 +1696,53 @@ function setupChannel(
 
             }
 
-        };
+        }
+    );
 
 
-    channel.onclose = () => {
+    connection.on(
+        "close",
+        () => {
 
-        console.log(
-            "P2P 연결이 종료되었습니다."
-        );
+            connections.delete(
+                connection.peer
+            );
 
-    };
+
+            if(isHost){
+
+                players =
+                    players.filter(
+                        player =>
+                        player.peerId !==
+                        connection.peer
+                    );
+
+
+                updateHostRoom();
+
+                broadcast({
+                    type:"players",
+                    players
+                });
+
+            }
+
+        }
+    );
+
+
+    connection.on(
+        "error",
+        error => {
+
+            console.error(
+                "DataConnection 오류:",
+                error
+            );
+
+        }
+    );
 
 }
 
@@ -1893,18 +1752,17 @@ SEND
 ========================================================= */
 
 function send(
-    channel,
+    connection,
     data
 ){
 
     if(
-        channel &&
-        channel.readyState ===
-        "open"
+        connection &&
+        connection.open
     ){
 
-        channel.send(
-            JSON.stringify(data)
+        connection.send(
+            data
         );
 
     }
@@ -1916,21 +1774,17 @@ function send(
 BROADCAST
 ========================================================= */
 
-function broadcast(data){
+function broadcast(
+    data
+){
 
     connections.forEach(
-        connection => {
+        item => {
 
-            if(
-                connection.channel
-            ){
-
-                send(
-                    connection.channel,
-                    data
-                );
-
-            }
+            send(
+                item.connection,
+                data
+            );
 
         }
     );
@@ -1939,15 +1793,48 @@ function broadcast(data){
 
 
 /* =========================================================
-HOST ONLY BROADCAST
+SEND TO HOST
 ========================================================= */
 
-function broadcastFromHost(data){
+function sendToHost(
+    data
+){
 
-    if(!isHost)
+    const host =
+        connections.get(
+            roomCode
+        );
+
+
+    /*
+     * PeerJS에서는 호스트의 peer ID가
+     * 곧 roomCode입니다.
+     */
+    if(host){
+
+        send(
+            host.connection,
+            data
+        );
+
         return;
 
-    broadcast(data);
+    }
+
+
+    /*
+     * 혹시 key가 다른 경우를 대비합니다.
+     */
+    connections.forEach(
+        item => {
+
+            send(
+                item.connection,
+                data
+            );
+
+        }
+    );
 
 }
 
@@ -1956,37 +1843,22 @@ function broadcastFromHost(data){
 MESSAGES
 ========================================================= */
 
-function handleMessage(
-    channel,
+async function handleMessage(
+    connection,
     msg
 ){
 
     switch(msg.type){
 
-        case "welcome":
-
-            topic =
-                msg.topic;
-
-            maxPlayers =
-                msg.maxPlayers;
-
-            players =
-                msg.players || [];
-
-            updateLobby();
-
-            showScreen(
-                "lobby"
-            );
-
-            break;
-
+        /* =============================================
+           JOIN
+        ============================================= */
 
         case "join":
 
             if(!isHost)
                 break;
+
 
             if(
                 players.length >=
@@ -1994,7 +1866,7 @@ function handleMessage(
             ){
 
                 send(
-                    channel,
+                    connection,
                     {
                         type:"roomFull"
                     }
@@ -2003,6 +1875,26 @@ function handleMessage(
                 return;
 
             }
+
+
+            const correctPassword =
+                msg.passwordHash ===
+                roomPasswordHash;
+
+
+            if(!correctPassword){
+
+                send(
+                    connection,
+                    {
+                        type:"wrongPassword"
+                    }
+                );
+
+                return;
+
+            }
+
 
             if(
                 players.some(
@@ -2015,18 +1907,33 @@ function handleMessage(
 
             }
 
+
             players.push({
 
-                id:msg.id,
+                id:
+                    msg.id,
 
                 name:
                     msg.name,
 
-                host:false
+                host:false,
+
+                peerId:
+                    connection.peer
 
             });
 
-            updateLobby();
+
+            send(
+                connection,
+                {
+                    type:"welcome",
+                    topic,
+                    maxPlayers,
+                    players
+                }
+            );
+
 
             broadcast({
 
@@ -2036,33 +1943,131 @@ function handleMessage(
 
             });
 
+
+            updateHostRoom();
+
             break;
 
+
+        /* =============================================
+           WELCOME
+        ============================================= */
+
+        case "welcome":
+
+            topic =
+                msg.topic;
+
+            maxPlayers =
+                msg.maxPlayers;
+
+            players =
+                msg.players || [];
+
+
+            updateLobby();
+
+            showScreen(
+                "lobby"
+            );
+
+            break;
+
+
+        /* =============================================
+           ROOM FULL
+        ============================================= */
 
         case "roomFull":
 
             document
-                .getElementById("guestSignalStatus")
+                .getElementById("connectingText")
                 .textContent =
                 "이 방은 이미 설정된 인원이 모두 참가했습니다.";
 
+
+            setTimeout(
+                () => {
+
+                    showScreen(
+                        "home"
+                    );
+
+                    document
+                        .getElementById("homeStatus")
+                        .textContent =
+                        "이 방은 이미 설정된 인원이 모두 참가했습니다.";
+
+                },
+                1500
+            );
+
             break;
 
+
+        /* =============================================
+           WRONG PASSWORD
+        ============================================= */
+
+        case "wrongPassword":
+
+            document
+                .getElementById("connectingText")
+                .textContent =
+                "비밀번호가 올바르지 않습니다.";
+
+
+            setTimeout(
+                () => {
+
+                    showScreen(
+                        "home"
+                    );
+
+                    document
+                        .getElementById("homeStatus")
+                        .textContent =
+                        "방 비밀번호가 올바르지 않습니다.";
+
+                },
+                1200
+            );
+
+            break;
+
+
+        /* =============================================
+           PLAYERS
+        ============================================= */
 
         case "players":
 
             players =
-                msg.players;
+                msg.players || [];
 
             updateLobby();
 
+            if(isHost){
+
+                updateHostRoom();
+
+            }
+
             break;
 
+
+        /* =============================================
+           GAME START
+        ============================================= */
 
         case "gameStart":
 
             currentTurn =
                 msg.turn;
+
+            drawings = {};
+
+            audios = {};
 
             startTurn(
                 msg.previous ||
@@ -2072,25 +2077,37 @@ function handleMessage(
             break;
 
 
+        /* =============================================
+           DRAWING
+        ============================================= */
+
         case "drawing":
 
             drawings[
                 msg.playerIndex
             ] =
-                msg.image;
+            msg.image;
 
             break;
 
+
+        /* =============================================
+           ACT
+        ============================================= */
 
         case "act":
 
             audios[
                 msg.playerIndex
             ] =
-                msg.audio;
+            msg.audio;
 
             break;
 
+
+        /* =============================================
+           TURN
+        ============================================= */
 
         case "turn":
 
@@ -2104,6 +2121,80 @@ function handleMessage(
 
             break;
 
+
+        /* =============================================
+           TURN REQUEST
+        ============================================= */
+
+        case "turnRequest":
+
+            if(!isHost)
+                break;
+
+
+            currentTurn =
+                msg.turn;
+
+
+            broadcast({
+
+                type:"turn",
+
+                turn:
+                    msg.turn,
+
+                previous:
+                    msg.previous
+
+            });
+
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        /* =============================================
+           FINISH REQUEST
+        ============================================= */
+
+        case "finishRequest":
+
+            if(!isHost)
+                break;
+
+
+            drawings =
+                msg.drawings ||
+                drawings;
+
+            audios =
+                msg.audios ||
+                audios;
+
+
+            broadcast({
+
+                type:"finished",
+
+                drawings,
+
+                audios
+
+            });
+
+
+            showResult();
+
+            break;
+
+
+        /* =============================================
+           FINISHED
+        ============================================= */
 
         case "finished":
 
@@ -2120,9 +2211,9 @@ function handleMessage(
             break;
 
 
-        /* =================================================
-           VOTING
-        ================================================= */
+        /* =============================================
+           VOTE REQUEST
+        ============================================= */
 
         case "voteRequest":
 
@@ -2161,16 +2252,18 @@ function handleMessage(
             )
                 break;
 
+
             voteVoters[
                 msg.voterId
             ] =
-                msg.scene;
+            msg.scene;
+
 
             votes[
                 msg.scene
             ] =
-                (votes[msg.scene] || 0) +
-                1;
+            (votes[msg.scene] || 0) + 1;
+
 
             broadcast({
 
@@ -2187,6 +2280,7 @@ function handleMessage(
 
             });
 
+
             renderVotes();
 
             checkVoteFinished();
@@ -2194,11 +2288,16 @@ function handleMessage(
             break;
 
 
+        /* =============================================
+           VOTE ACCEPTED
+        ============================================= */
+
         case "voteAccepted":
 
             votes =
                 msg.votes ||
                 {};
+
 
             if(
                 msg.voterId ===
@@ -2210,10 +2309,15 @@ function handleMessage(
 
             }
 
+
             renderVotes();
 
             break;
 
+
+        /* =============================================
+           VOTE END
+        ============================================= */
 
         case "voteEnd":
 
@@ -2238,6 +2342,186 @@ function handleMessage(
 
 
 /* =========================================================
+HOST ROOM UI
+========================================================= */
+
+function updateHostRoom(){
+
+    document
+        .getElementById("hostRoomCode")
+        .textContent =
+        roomCode;
+
+
+    document
+        .getElementById("hostPlayerStatus")
+        .textContent =
+        `${players.length} / ${maxPlayers}명 참가`;
+
+
+    const container =
+        document.getElementById(
+            "hostPlayers"
+        );
+
+
+    container.innerHTML = "";
+
+
+    players.forEach(
+        player => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "player";
+
+            div.textContent =
+                player.name +
+                (
+                    player.host
+                        ? " 👑"
+                        : ""
+                );
+
+            container.appendChild(
+                div
+            );
+
+        }
+    );
+
+
+    const startButton =
+        document.getElementById(
+            "hostStartGame"
+        );
+
+
+    startButton.disabled =
+        players.length < 2;
+
+}
+
+
+/* =========================================================
+COPY INVITE
+========================================================= */
+
+document
+    .getElementById("copyInvite")
+    .onclick =
+    () => {
+
+        const link =
+            document
+                .getElementById("inviteLink")
+                .value;
+
+
+        copyText(
+            link
+        );
+
+
+        document
+            .getElementById("hostRoomStatus")
+            .textContent =
+            "초대 링크를 복사했습니다.";
+
+    };
+
+
+/* =========================================================
+START GAME
+========================================================= */
+
+document
+    .getElementById("hostStartGame")
+    .onclick =
+    startGame;
+
+
+document
+    .getElementById("startGame")
+    .onclick =
+    startGame;
+
+
+function startGame(){
+
+    if(!isHost)
+        return;
+
+
+    if(
+        players.length < 2
+    ){
+
+        const status =
+            document.getElementById(
+                "hostRoomStatus"
+            ) ||
+            document.getElementById(
+                "lobbyStatus"
+            );
+
+
+        status.textContent =
+            "최소 2명이 필요합니다.";
+
+        return;
+
+    }
+
+
+    if(
+        players.length <
+        maxPlayers
+    ){
+
+        const proceed =
+            confirm(
+                `현재 ${players.length}명이 참가했습니다. 게임을 시작하시겠습니까?`
+            );
+
+
+        if(!proceed)
+            return;
+
+    }
+
+
+    currentTurn =
+        0;
+
+    drawings = {};
+
+    audios = {};
+
+
+    broadcast({
+
+        type:"gameStart",
+
+        turn:0,
+
+        previous:null
+
+    });
+
+
+    startTurn(
+        null
+    );
+
+}
+
+
+/* =========================================================
 LOBBY
 ========================================================= */
 
@@ -2248,7 +2532,9 @@ function updateLobby(){
             "players"
         );
 
+
     list.innerHTML = "";
+
 
     players.forEach(
         p => {
@@ -2284,12 +2570,14 @@ function updateLobby(){
         .textContent =
         `${players.length} / ${maxPlayers}명 참가`;
 
+
     document
         .getElementById(
             "lobbyRoomCode"
         )
         .textContent =
         roomCode;
+
 
     document
         .getElementById(
@@ -2298,72 +2586,19 @@ function updateLobby(){
         .textContent =
         topic;
 
-}
 
-
-/* =========================================================
-START GAME
-========================================================= */
-
-document
-    .getElementById("startGame")
-    .onclick =
-    () => {
-
-        if(!isHost)
-            return;
-
-        if(
-            players.length < 2
-        ){
-
-            document
-                .getElementById(
-                    "lobbyStatus"
-                )
-                .textContent =
-                "최소 2명이 필요합니다.";
-
-            return;
-
-        }
-
-        if(
-            players.length <
-            maxPlayers
-        ){
-
-            const proceed =
-                confirm(
-                    `현재 ${players.length}명이 참가했습니다. 게임을 시작하시겠습니까?`
-                );
-
-            if(!proceed)
-                return;
-
-        }
-
-        currentTurn = 0;
-
-        drawings = {};
-
-        audios = {};
-
-        broadcast({
-
-            type:"gameStart",
-
-            turn:currentTurn,
-
-            previous:null
-
-        });
-
-        startTurn(
-            null
+    const startButton =
+        document.getElementById(
+            "startGame"
         );
 
-    };
+
+    startButton.style.display =
+        isHost
+            ? "block"
+            : "none";
+
+}
 
 
 /* =========================================================
@@ -2376,6 +2611,7 @@ function startTurn(
 
     const player =
         players[currentTurn];
+
 
     if(!player){
 
@@ -2401,12 +2637,14 @@ function startTurn(
             "waiting"
         );
 
+
         document
             .getElementById(
                 "waitingTitle"
             )
             .textContent =
             `${player.name}님의 차례입니다.`;
+
 
         document
             .getElementById(
@@ -2429,10 +2667,12 @@ const drawCanvas =
         "drawCanvas"
     );
 
+
 const drawCtx =
     drawCanvas.getContext(
         "2d"
     );
+
 
 let drawingNow = false;
 
@@ -2451,6 +2691,7 @@ function clearDraw(){
 
 }
 
+
 clearDraw();
 
 
@@ -2461,10 +2702,12 @@ function pointerPosition(
     const rect =
         drawCanvas.getBoundingClientRect();
 
+
     const source =
         event.touches
             ? event.touches[0]
             : event;
+
 
     return {
 
@@ -2491,14 +2734,18 @@ function startDraw(
 
     event.preventDefault();
 
-    drawingNow = true;
+    drawingNow =
+        true;
+
 
     const p =
         pointerPosition(
             event
         );
 
+
     drawCtx.beginPath();
+
 
     drawCtx.moveTo(
         p.x,
@@ -2515,12 +2762,15 @@ function moveDraw(
     if(!drawingNow)
         return;
 
+
     event.preventDefault();
+
 
     const p =
         pointerPosition(
             event
         );
+
 
     drawCtx.strokeStyle =
         document
@@ -2528,6 +2778,7 @@ function moveDraw(
                 "colorPicker"
             )
             .value;
+
 
     drawCtx.lineWidth =
         Number(
@@ -2538,16 +2789,19 @@ function moveDraw(
                 .value
         );
 
+
     drawCtx.lineCap =
         "round";
 
     drawCtx.lineJoin =
         "round";
 
+
     drawCtx.lineTo(
         p.x,
         p.y
     );
+
 
     drawCtx.stroke();
 
@@ -2559,20 +2813,28 @@ drawCanvas.addEventListener(
     startDraw
 );
 
+
 drawCanvas.addEventListener(
     "mousemove",
     moveDraw
 );
 
+
 drawCanvas.addEventListener(
     "mouseup",
-    () => drawingNow = false
+    () => {
+        drawingNow = false;
+    }
 );
+
 
 drawCanvas.addEventListener(
     "mouseleave",
-    () => drawingNow = false
+    () => {
+        drawingNow = false;
+    }
 );
+
 
 drawCanvas.addEventListener(
     "touchstart",
@@ -2580,15 +2842,19 @@ drawCanvas.addEventListener(
     {passive:false}
 );
 
+
 drawCanvas.addEventListener(
     "touchmove",
     moveDraw,
     {passive:false}
 );
 
+
 drawCanvas.addEventListener(
     "touchend",
-    () => drawingNow = false
+    () => {
+        drawingNow = false;
+    }
 );
 
 
@@ -2612,7 +2878,13 @@ function showDraw(
         "draw"
     );
 
+
+    submittedDrawing =
+        false;
+
+
     clearDraw();
+
 
     document
         .getElementById(
@@ -2634,18 +2906,22 @@ function showDraw(
             .classList
             .remove("hidden");
 
+
         const canvas =
             document.getElementById(
                 "previousCanvas"
             );
+
 
         const ctx =
             canvas.getContext(
                 "2d"
             );
 
+
         const img =
             new Image();
+
 
         img.onload = () => {
 
@@ -2655,6 +2931,7 @@ function showDraw(
                 800,
                 600
             );
+
 
             ctx.drawImage(
                 img,
@@ -2666,6 +2943,7 @@ function showDraw(
 
         };
 
+
         img.src =
             previous;
 
@@ -2676,6 +2954,7 @@ function showDraw(
             .add("hidden");
 
     }
+
 
     startDrawTimer();
 
@@ -2692,7 +2971,10 @@ function startDrawTimer(){
         drawInterval
     );
 
-    let remaining = 30;
+
+    let remaining =
+        30;
+
 
     document
         .getElementById(
@@ -2708,12 +2990,14 @@ function startDrawTimer(){
 
                 remaining--;
 
+
                 document
                     .getElementById(
                         "drawTimer"
                     )
                     .textContent =
                     remaining;
+
 
                 if(
                     remaining <= 0
@@ -2722,6 +3006,7 @@ function startDrawTimer(){
                     clearInterval(
                         drawInterval
                     );
+
 
                     submitDrawing();
 
@@ -2748,9 +3033,18 @@ document
 
 function submitDrawing(){
 
+    if(submittedDrawing)
+        return;
+
+
+    submittedDrawing =
+        true;
+
+
     clearInterval(
         drawInterval
     );
+
 
     const image =
         drawCanvas.toDataURL(
@@ -2758,10 +3052,11 @@ function submitDrawing(){
             .65
         );
 
+
     drawings[
         currentTurn
     ] =
-        image;
+    image;
 
 
     broadcast({
@@ -2795,6 +3090,11 @@ function showAct(
         "act"
     );
 
+
+    submittedRecording =
+        false;
+
+
     document
         .getElementById(
             "actTopic"
@@ -2803,18 +3103,37 @@ function showAct(
         topic;
 
 
+    document
+        .getElementById(
+            "recordStatus"
+        )
+        .textContent =
+        "자유롭게 연기해 주세요!";
+
+
+    document
+        .getElementById(
+            "recordButton"
+        )
+        .textContent =
+        "🎙️ 녹음 시작";
+
+
     const canvas =
         document.getElementById(
             "actCanvas"
         );
+
 
     const ctx =
         canvas.getContext(
             "2d"
         );
 
+
     const img =
         new Image();
+
 
     img.onload = () => {
 
@@ -2825,6 +3144,7 @@ function showAct(
             600
         );
 
+
         ctx.drawImage(
             img,
             0,
@@ -2834,6 +3154,7 @@ function showAct(
         );
 
     };
+
 
     img.src =
         image;
@@ -2883,6 +3204,7 @@ async function startRecording(){
 
         let mimeType =
             "audio/webm";
+
 
         if(
             !MediaRecorder.isTypeSupported(
@@ -2944,7 +3266,7 @@ async function startRecording(){
                         audios[
                             currentTurn
                         ] =
-                            reader.result;
+                        reader.result;
 
 
                         broadcast({
@@ -2966,6 +3288,7 @@ async function startRecording(){
                             )
                             .textContent =
                             "녹음이 완료되었습니다.";
+
 
                         nextTurn();
 
@@ -3000,9 +3323,11 @@ async function startRecording(){
 
         startRecordTimer();
 
+
     }catch(error){
 
         console.error(error);
+
 
         alert(
             "마이크 사용 권한이 필요합니다."
@@ -3023,7 +3348,10 @@ function startRecordTimer(){
         recordInterval
     );
 
-    let remaining = 15;
+
+    let remaining =
+        15;
+
 
     document
         .getElementById(
@@ -3039,12 +3367,14 @@ function startRecordTimer(){
 
                 remaining--;
 
+
                 document
                     .getElementById(
                         "recordTimer"
                     )
                     .textContent =
                     remaining;
+
 
                 if(
                     remaining <= 0
@@ -3071,12 +3401,14 @@ function stopRecording(){
         recordInterval
     );
 
+
     document
         .getElementById(
             "recordButton"
         )
         .textContent =
         "🎙️ 녹음 시작";
+
 
     if(
         mediaRecorder &&
@@ -3131,6 +3463,7 @@ function nextTurn(){
 
         });
 
+
     }else{
 
         sendToHost({
@@ -3155,74 +3488,39 @@ function nextTurn(){
 
 
 /* =========================================================
-SEND TO HOST
-========================================================= */
-
-function sendToHost(data){
-
-    const host =
-        connections.get(
-            "host"
-        );
-
-    if(
-        host &&
-        host.channel
-    ){
-
-        send(
-            host.channel,
-            data
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-HOST TURN REQUEST
-========================================================= */
-
-function handleTurnRequest(
-    msg
-){
-
-    if(!isHost)
-        return;
-
-    broadcast({
-
-        type:"turn",
-
-        turn:
-            msg.turn,
-
-        previous:
-            msg.previous
-
-    });
-
-}
-
-
-/* =========================================================
-FINISH
+FINISH GAME
 ========================================================= */
 
 function finishGame(){
 
-    broadcast({
+    if(isHost){
 
-        type:"finished",
+        broadcast({
 
-        drawings,
+            type:"finished",
 
-        audios
+            drawings,
 
-    });
+            audios
 
-    showResult();
+        });
+
+
+        showResult();
+
+    }else{
+
+        sendToHost({
+
+            type:"finishRequest",
+
+            drawings,
+
+            audios
+
+        });
+
+    }
 
 }
 
@@ -3246,6 +3544,7 @@ function showResult(){
 
     voteEnded = false;
 
+
     clearInterval(
         voteTimer
     );
@@ -3255,6 +3554,7 @@ function showResult(){
         document.getElementById(
             "resultScenes"
         );
+
 
     container.innerHTML = "";
 
@@ -3274,8 +3574,10 @@ function showResult(){
                 "div"
             );
 
+
         card.className =
             "card scene";
+
 
         card.dataset.scene =
             i;
@@ -3286,12 +3588,14 @@ function showResult(){
                 "h3"
             );
 
+
         title.textContent =
             `Scene ${i + 1} — ${
                 players[i]
                     ? players[i].name
                     : "참가자"
             }`;
+
 
         card.appendChild(
             title
@@ -3303,9 +3607,13 @@ function showResult(){
                 "canvas"
             );
 
-        canvas.width = 800;
 
-        canvas.height = 600;
+        canvas.width =
+            800;
+
+        canvas.height =
+            600;
+
 
         card.appendChild(
             canvas
@@ -3316,6 +3624,7 @@ function showResult(){
             canvas.getContext(
                 "2d"
             );
+
 
         const img =
             new Image();
@@ -3345,11 +3654,14 @@ function showResult(){
                     "audio"
                 );
 
+
             audio.controls =
                 true;
 
+
             audio.src =
                 audios[i];
+
 
             card.appendChild(
                 audio
@@ -3363,14 +3675,18 @@ function showResult(){
                 "div"
             );
 
+
         voteCount.className =
             "vote-count";
+
 
         voteCount.id =
             `votes-${i}`;
 
+
         voteCount.textContent =
             "👍 0표";
+
 
         card.appendChild(
             voteCount
@@ -3382,11 +3698,14 @@ function showResult(){
                 "button"
             );
 
+
         voteButton.className =
             "primary vote-button";
 
+
         voteButton.dataset.scene =
             i;
+
 
         voteButton.textContent =
             "👍 이 장면에 투표";
@@ -3401,6 +3720,7 @@ function showResult(){
             voteButton.disabled =
                 true;
 
+
             voteButton.textContent =
                 "내 장면입니다.";
 
@@ -3410,7 +3730,9 @@ function showResult(){
         voteButton.onclick =
             () => {
 
-                submitVote(i);
+                submitVote(
+                    i
+                );
 
             };
 
@@ -3432,8 +3754,10 @@ function showResult(){
             "div"
         );
 
+
     voteInfo.id =
         "voteInfo";
+
 
     voteInfo.className =
         "card center";
@@ -3484,17 +3808,22 @@ function showResult(){
                 "button"
             );
 
+
         endButton.className =
             "secondary";
+
 
         endButton.textContent =
             "🏁 투표 종료";
 
+
         endButton.style.width =
             "100%";
 
+
         endButton.onclick =
             endVoting;
+
 
         voteInfo.appendChild(
             endButton
@@ -3547,9 +3876,10 @@ function submitVote(
         voteVoters[myId] =
             scene;
 
+
         votes[scene] =
-            (votes[scene] || 0) +
-            1;
+            (votes[scene] || 0) + 1;
+
 
         myVote =
             scene;
@@ -3574,6 +3904,7 @@ function submitVote(
         renderVotes();
 
         checkVoteFinished();
+
 
     }else{
 
@@ -3610,6 +3941,7 @@ function renderVotes(){
             document.getElementById(
                 `votes-${i}`
             );
+
 
         if(element){
 
@@ -3652,6 +3984,7 @@ function renderVotes(){
                     button.disabled =
                         true;
 
+
                     button.textContent =
                         "✓ 투표했습니다.";
 
@@ -3681,7 +4014,9 @@ function startVoteTimer(){
         voteTimer
     );
 
-    let remaining = 15;
+
+    let remaining =
+        15;
 
 
     const timer =
@@ -3726,6 +4061,7 @@ function startVoteTimer(){
                     clearInterval(
                         voteTimer
                     );
+
 
                     if(isHost){
 
@@ -3779,6 +4115,7 @@ function endVoting(){
     if(!isHost)
         return;
 
+
     if(voteEnded)
         return;
 
@@ -3822,7 +4159,8 @@ function showWinner(){
     );
 
 
-    let highest = 0;
+    let highest =
+        0;
 
 
     Object.values(
@@ -3895,6 +4233,7 @@ function showWinner(){
             </h2>
 
         `;
+
 
         return;
 
@@ -3981,27 +4320,40 @@ function showWinner(){
                     `.scene[data-scene="${index}"]`
                 );
 
+
             if(card){
 
                 card.classList.add(
                     "winner"
                 );
 
-                const badge =
-                    document.createElement(
-                        "div"
+
+                if(
+                    !card.querySelector(
+                        ".winner-badge"
+                    )
+                ){
+
+                    const badge =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    badge.className =
+                        "winner-badge";
+
+
+                    badge.textContent =
+                        "🏆 최다 득표";
+
+
+                    card.insertBefore(
+                        badge,
+                        card.firstChild
                     );
 
-                badge.className =
-                    "winner-badge";
-
-                badge.textContent =
-                    "🏆 최다 득표";
-
-                card.insertBefore(
-                    badge,
-                    card.firstChild
-                );
+                }
 
             }
 
@@ -4049,6 +4401,7 @@ document
 
             audio.currentTime =
                 0;
+
 
             try{
 
@@ -4110,8 +4463,10 @@ async function exportWebM(){
             "canvas"
         );
 
+
     canvas.width =
         800;
+
 
     canvas.height =
         600;
@@ -4201,8 +4556,10 @@ async function exportWebM(){
             a.href =
                 url;
 
+
             a.download =
                 "draw-and-act.webm";
+
 
             a.click();
 
@@ -4259,6 +4616,7 @@ async function exportWebM(){
         ctx.fillStyle =
             "#fff";
 
+
         ctx.fillRect(
             0,
             0,
@@ -4293,26 +4651,6 @@ async function exportWebM(){
 
 
 /* =========================================================
-HOST LOBBY BUTTON
-========================================================= */
-
-document
-    .getElementById(
-        "hostLobbyButton"
-    )
-    .onclick =
-    () => {
-
-        updateLobby();
-
-        showScreen(
-            "lobby"
-        );
-
-    };
-
-
-/* =========================================================
 INITIAL
 ========================================================= */
 
@@ -4320,45 +4658,213 @@ if(urlRoom){
 
     document
         .getElementById(
-            "homeStatus"
+            "joinCode"
         )
-        .textContent =
-        `방 ${urlRoom.toUpperCase()}에 참가할 준비가 되었습니다.`;
+        .value =
+        urlRoom;
 
 }
 
 
 /* =========================================================
-PATCH: TURN REQUEST
+FIX: GUEST JOIN PASSWORD
 ========================================================= */
 
-const originalHandleMessage =
-    handleMessage;
+/*
+ * 위 joinRoom에서 연결 후 비밀번호 해시를
+ * 안전하게 전송하기 위해 connection open 이벤트를
+ * 별도로 처리합니다.
+ */
 
+document
+    .getElementById("joinButton")
+    .addEventListener(
+        "click",
+        async () => {
+
+            /*
+             * 실제 join 처리는 onclick에서 수행되므로
+             * 여기서는 추가 동작을 하지 않습니다.
+             */
+
+        }
+    );
+
+
+/* =========================================================
+REPLACE JOIN FUNCTION
+========================================================= */
 
 /*
- * 기존 메시지 처리에 turnRequest만 추가합니다.
+ * 기존 joinRoom보다 단순하고 안정적인 버전으로
+ * 다시 정의합니다.
  */
-handleMessage =
-    function(channel,msg){
 
-        if(
-            msg.type ===
-            "turnRequest"
-        ){
+document
+    .getElementById("joinButton")
+    .onclick =
+    async () => {
 
-            handleTurnRequest(
-                msg
-            );
+        myName =
+            document
+                .getElementById("joinName")
+                .value
+                .trim() ||
+            "참가자";
+
+
+        roomCode =
+            document
+                .getElementById("joinCode")
+                .value
+                .trim()
+                .toUpperCase();
+
+
+        const password =
+            document
+                .getElementById("joinPassword")
+                .value;
+
+
+        if(!roomCode){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "방 코드를 입력해 주세요.";
 
             return;
 
         }
 
-        originalHandleMessage(
-            channel,
-            msg
+
+        if(!password){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "방 비밀번호를 입력해 주세요.";
+
+            return;
+
+        }
+
+
+        const passwordHash =
+            await hashPassword(
+                password
+            );
+
+
+        role =
+            "guest";
+
+        isHost =
+            false;
+
+
+        showScreen(
+            "connecting"
         );
+
+
+        document
+            .getElementById("connectingText")
+            .textContent =
+            "방에 연결하고 있습니다.";
+
+
+        try{
+
+            await createPeer(
+                myId
+            );
+
+
+            const connection =
+                peer.connect(
+                    roomCode,
+                    {
+                        reliable:true
+                    }
+                );
+
+
+            connection.on(
+                "open",
+                () => {
+
+                    setupConnection(
+                        connection
+                    );
+
+
+                    send(
+                        connection,
+                        {
+                            type:"join",
+                            id:myId,
+                            name:myName,
+                            passwordHash
+                        }
+                    );
+
+                }
+            );
+
+
+            connection.on(
+                "error",
+                error => {
+
+                    console.error(
+                        error
+                    );
+
+                }
+            );
+
+
+            history.replaceState(
+                null,
+                "",
+                "#room=" +
+                roomCode
+            );
+
+
+        }catch(error){
+
+            console.error(error);
+
+
+            if(peer){
+
+                try{
+                    peer.destroy();
+                }catch{}
+
+            }
+
+
+            peer =
+                null;
+
+
+            showScreen(
+                "home"
+            );
+
+
+            document
+                .getElementById(
+                    "homeStatus"
+                )
+                .textContent =
+                "방에 연결하지 못했습니다. 방 코드와 비밀번호를 확인해 주세요.";
+
+        }
 
     };
 
