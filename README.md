@@ -6,7 +6,7 @@
 
 A multiplayer party game where you draw, act, and create your own little story with other players.
 
-**Prototype Playtest:** https://www.youtube.com/watch?v=0p6C0voYZ2Q
+**Prototype Playtest Video:** https://www.youtube.com/watch?v=0p6C0voYZ2Q
 
 **Play:** https://ulsidae.github.io/Draw_and_Act/
 
