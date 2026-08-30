@@ -1,0 +1,4874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Draw and Act!</title>
+
+<!-- PeerJS -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#101014;
+    color:#fff;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input,
+select,
+textarea{
+    font:inherit;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:13px 18px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+button:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+}
+
+.app{
+    width:min(900px,100%);
+    margin:auto;
+    padding:25px 16px 70px;
+}
+
+.logo{
+    text-align:center;
+    font-size:clamp(48px,11vw,82px);
+    font-weight:1000;
+    letter-spacing:-5px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#aaa;
+    margin-top:4px;
+}
+
+.description{
+    max-width:680px;
+    margin:15px auto 30px;
+    text-align:center;
+    line-height:1.7;
+    color:#777;
+    font-size:14px;
+}
+
+.description strong{
+    color:#fff;
+}
+
+.screen{
+    display:none;
+}
+
+.screen.active{
+    display:block;
+}
+
+.card{
+    background:#19191f;
+    border:1px solid #303038;
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:16px;
+}
+
+h2{
+    margin-top:0;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    padding:13px;
+    margin-bottom:12px;
+    border:1px solid #3a3a42;
+    border-radius:10px;
+    background:#111115;
+    color:#fff;
+    outline:none;
+}
+
+textarea{
+    min-height:140px;
+    resize:vertical;
+    font-family:monospace;
+    font-size:12px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    color:#aaa;
+    font-size:13px;
+}
+
+.primary{
+    width:100%;
+    background:#fff;
+    color:#111;
+}
+
+.secondary{
+    background:#303038;
+    color:#fff;
+}
+
+.danger{
+    background:#702525;
+    color:#fff;
+}
+
+.center{
+    text-align:center;
+}
+
+.small{
+    color:#777;
+    font-size:13px;
+}
+
+.status{
+    min-height:24px;
+    margin-top:12px;
+    text-align:center;
+    color:#aaa;
+}
+
+.room-code{
+    text-align:center;
+    font-size:52px;
+    font-weight:1000;
+    letter-spacing:10px;
+    margin:12px 0;
+}
+
+.topic-box{
+    padding:18px;
+    background:#111115;
+    border-radius:12px;
+    text-align:center;
+}
+
+.topic-label{
+    color:#666;
+    font-size:11px;
+    letter-spacing:3px;
+}
+
+.topic{
+    margin-top:7px;
+    font-size:28px;
+    font-weight:900;
+}
+
+.players{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.player{
+    padding:10px 14px;
+    background:#292930;
+    border-radius:10px;
+}
+
+.phase{
+    text-align:center;
+    color:#777;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:3px;
+}
+
+.game-topic{
+    text-align:center;
+    font-size:clamp(24px,6vw,38px);
+    font-weight:1000;
+    margin:8px 0 18px;
+}
+
+.timer{
+    text-align:center;
+    font-size:58px;
+    line-height:1;
+    font-weight:1000;
+    margin:15px;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#fff;
+    border-radius:14px;
+    touch-action:none;
+}
+
+.toolbar{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+}
+
+.toolbar input[type=color]{
+    width:48px;
+    height:42px;
+    padding:2px;
+    margin:0;
+}
+
+.toolbar input[type=range]{
+    flex:1;
+    margin:0;
+}
+
+.scene{
+    margin-bottom:20px;
+}
+
+.scene canvas{
+    margin-bottom:10px;
+}
+
+.scene audio{
+    width:100%;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.big{
+    font-size:60px;
+}
+
+.vote-count{
+    text-align:center;
+    font-size:22px;
+    font-weight:900;
+    margin:14px 0 10px;
+}
+
+.vote-button{
+    width:100%;
+}
+
+.winner{
+    border:2px solid #fff!important;
+    box-shadow:0 0 30px rgba(255,255,255,.15);
+}
+
+.winner-badge{
+    display:inline-block;
+    padding:6px 12px;
+    border-radius:999px;
+    background:#fff;
+    color:#111;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+
+.password-note{
+    margin-top:-4px;
+    margin-bottom:12px;
+    color:#666;
+    font-size:12px;
+}
+
+@media(max-width:600px){
+
+    .logo{
+        letter-spacing:-3px;
+    }
+
+    .room-code{
+        font-size:42px;
+    }
+
+    .toolbar{
+        flex-wrap:wrap;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+<div class="logo">
+Draw and Act!
+</div>
+
+<div class="subtitle">
+描いて、演じて、物語を作ろう！
+</div>
+
+<div class="description">
+操作方法：マウスまたはタッチスクリーンで操作します。<br>
+自分の物語を想像して、友達や他のプレイヤーと一緒に絵を描いたり、
+録音したりしながら、自分たちだけの物語を作ろう。
+<br>
+必要なのはデバイスと、あなたの想像力だけ！
+<br><br>
+<strong>最多得票を目指そう！</strong>
+</div>
+
+</header>
+
+
+<!-- =====================================================
+HOME
+===================================================== -->
+
+<section id="home" class="screen active">
+
+<div class="card">
+
+<h2>🎨 新しい物語を作る</h2>
+
+<label>ニックネーム</label>
+
+<input
+id="hostName"
+maxlength="20"
+placeholder="例：山田太郎"
+>
+
+<label>人数</label>
+
+<select id="playerCount">
+
+<option value="2">2人</option>
+<option value="3">3人</option>
+<option value="4" selected>4人</option>
+<option value="5">5人</option>
+<option value="6">6人</option>
+
+</select>
+
+<label>物語のアイデア</label>
+
+<input
+id="topicInput"
+maxlength="120"
+placeholder="例：ある日突然、宇宙に落ちてしまいました。"
+>
+
+<label>ルームパスワード</label>
+
+<input
+id="hostPassword"
+type="password"
+maxlength="40"
+placeholder="パスワードを設定してください。"
+>
+
+<div class="password-note">
+ルームを安全に保つため、パスワードを設定してください。
+</div>
+
+<button
+id="createButton"
+class="primary"
+>
+ルームを作成
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>🚪 物語に参加</h2>
+
+<label>ニックネーム</label>
+
+<input
+id="joinName"
+maxlength="20"
+placeholder="例：佐藤一郎"
+>
+
+<label>ルームコード</label>
+
+<input
+id="joinCode"
+maxlength="6"
+placeholder="例：ABC123"
+>
+
+<label>ルームパスワード</label>
+
+<input
+id="joinPassword"
+type="password"
+maxlength="40"
+placeholder="ホストから受け取ったパスワードを入力してください。"
+>
+
+<button
+id="joinButton"
+class="secondary"
+>
+ルームに参加
+</button>
+
+</div>
+
+<div
+id="homeStatus"
+class="status"
+></div>
+
+</section>
+
+
+<!-- =====================================================
+JOIN CONNECTING
+===================================================== -->
+
+<section id="connecting" class="screen">
+
+<div class="card center">
+
+<div class="phase">
+CONNECTING
+</div>
+
+<div class="big">
+🔄
+</div>
+
+<h2>
+ルームに接続しています。
+</h2>
+
+<p
+id="connectingText"
+class="small"
+>
+しばらくお待ちください。
+</p>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+HOST ROOM
+===================================================== -->
+
+<section id="hostRoom" class="screen">
+
+<div class="card">
+
+<div class="phase">
+ROOM CREATED
+</div>
+
+<h2 class="center">
+友達を招待してください。
+</h2>
+
+<div
+id="hostRoomCode"
+class="room-code"
+>
+------
+</div>
+
+<p class="small center">
+以下のリンクを友達に送ってください。
+リンクを開くと、ルームコードが自動的に入力されます。
+</p>
+
+<input
+id="inviteLink"
+readonly
+>
+
+<button
+id="copyInvite"
+class="primary"
+>
+🔗 招待リンクをコピー
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+🔒 ルーム情報
+</h2>
+
+<p class="small">
+ルームパスワードを知っている参加者だけが入室できます。
+</p>
+
+<div
+id="hostPasswordStatus"
+class="center"
+>
+パスワードが設定されました。
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+👥 参加者
+</h2>
+
+<div
+id="hostPlayers"
+class="players"
+></div>
+
+<p
+id="hostPlayerStatus"
+class="small"
+></p>
+
+</div>
+
+
+<div
+id="hostRoomStatus"
+class="status"
+>
+参加者を待っています。
+</div>
+
+<button
+id="hostStartGame"
+class="primary"
+>
+🎬 物語を始める
+</button>
+
+</section>
+
+
+<!-- =====================================================
+LOBBY
+===================================================== -->
+
+<section id="lobby" class="screen">
+
+<div class="card">
+
+<div class="phase">
+LOBBY
+</div>
+
+<div
+id="lobbyRoomCode"
+class="room-code"
+>
+------
+</div>
+
+<div class="topic-box">
+
+<div class="topic-label">
+TODAY'S STORY
+</div>
+
+<div
+id="lobbyTopic"
+class="topic"
+>
+-
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+👥 参加者
+</h2>
+
+<div
+id="players"
+class="players"
+></div>
+
+<p
+id="playerStatus"
+class="small"
+></p>
+
+</div>
+
+
+<button
+id="startGame"
+class="primary"
+>
+🎬 物語を始める
+</button>
+
+<div
+id="lobbyStatus"
+class="status"
+>
+参加者を待っています。
+</div>
+
+</section>
+
+
+<!-- =====================================================
+DRAW
+===================================================== -->
+
+<section id="draw" class="screen">
+
+<div class="card">
+
+<div class="phase">
+DRAW
+</div>
+
+<div
+id="drawTopic"
+class="game-topic"
+></div>
+
+<div class="center small">
+前のシーンを見て、物語の続きを描いてください。
+</div>
+
+</div>
+
+
+<div
+id="previousCard"
+class="card hidden"
+>
+
+<div class="phase">
+PREVIOUS SCENE
+</div>
+
+<canvas
+id="previousCanvas"
+width="800"
+height="600"
+></canvas>
+
+</div>
+
+
+<div class="card">
+
+<div
+id="drawTimer"
+class="timer"
+>
+30
+</div>
+
+<canvas
+id="drawCanvas"
+width="800"
+height="600"
+></canvas>
+
+<div class="toolbar">
+
+<input
+id="colorPicker"
+type="color"
+value="#111111"
+>
+
+<input
+id="brushSize"
+type="range"
+min="2"
+max="40"
+value="6"
+>
+
+<button
+id="clearCanvas"
+class="secondary"
+>
+すべて消去
+</button>
+
+</div>
+
+<button
+id="submitDrawing"
+class="primary"
+style="margin-top:15px;"
+>
+絵を完成させる
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+WAITING
+===================================================== -->
+
+<section id="waiting" class="screen">
+
+<div class="card center">
+
+<div class="big">
+⏳
+</div>
+
+<h2 id="waitingTitle">
+他の 参加者を待っています。
+</h2>
+
+<p
+id="waitingText"
+class="small"
+></p>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+ACT
+===================================================== -->
+
+<section id="act" class="screen">
+
+<div class="card">
+
+<div class="phase">
+ACT
+</div>
+
+<div
+id="actTopic"
+class="game-topic"
+></div>
+
+<div class="center small">
+このシーンに合う声を演じてください。
+</div>
+
+</div>
+
+
+<div class="card">
+
+<canvas
+id="actCanvas"
+width="800"
+height="600"
+></canvas>
+
+<div
+id="recordTimer"
+class="timer"
+>
+15
+</div>
+
+<button
+id="recordButton"
+class="primary"
+>
+🎙️ 録音開始
+</button>
+
+<div
+id="recordStatus"
+class="status"
+>
+自由に演じてみよう！
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+RESULT
+===================================================== -->
+
+<section id="result" class="screen">
+
+<div class="card center">
+
+<div class="phase">
+FINAL STORY
+</div>
+
+<h2>
+🎬 私たちの物語
+</h2>
+
+<p class="small">
+絵と演技がひとつの小さな物語になりました。
+一番面白かったシーンに投票してください。
+</p>
+
+</div>
+
+
+<div id="resultScenes"></div>
+
+
+<div class="card">
+
+<button
+id="playAll"
+class="primary"
+>
+▶ 物語を再生
+</button>
+
+<button
+id="exportVideo"
+class="secondary"
+style="width:100%;margin-top:10px;"
+>
+💾 WebMとして保存
+</button>
+
+<div
+id="resultStatus"
+class="status"
+></div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+CONFIG
+========================================================= */
+
+const PEER_CONFIG = {
+
+    debug: 0
+
+};
+
+
+/* =========================================================
+STATE
+========================================================= */
+
+let role = null;
+
+let myId =
+    crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2);
+
+let myName = "";
+
+let roomCode = "";
+
+let topic = "";
+
+let maxPlayers = 4;
+
+let roomPasswordHash = "";
+
+let isHost = false;
+
+let peer = null;
+
+let connections = new Map();
+
+let players = [];
+
+let currentTurn = 0;
+
+let drawings = {};
+
+let audios = {};
+
+let mediaRecorder = null;
+
+let recordedChunks = [];
+
+let drawInterval = null;
+
+let recordInterval = null;
+
+let submittedDrawing = false;
+
+let submittedRecording = false;
+
+
+/* =========================================================
+VOTING
+========================================================= */
+
+let votes = {};
+
+let voteVoters = {};
+
+let myVote = null;
+
+let voteTimer = null;
+
+let voteEnded = false;
+
+
+/* =========================================================
+SCREEN
+========================================================= */
+
+const screenIds = [
+
+    "home",
+    "connecting",
+    "hostRoom",
+    "lobby",
+    "draw",
+    "waiting",
+    "act",
+    "result"
+
+];
+
+
+function showScreen(id){
+
+    screenIds.forEach(screen => {
+
+        const element =
+            document.getElementById(screen);
+
+        if(element){
+
+            element.classList.remove("active");
+
+        }
+
+    });
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+
+    window.scrollTo(0,0);
+
+}
+
+
+/* =========================================================
+URL ROOM
+========================================================= */
+
+function getRoomFromURL(){
+
+    const hash =
+        location.hash.replace("#","");
+
+    const params =
+        new URLSearchParams(hash);
+
+    return (
+        params.get("room") || ""
+    ).toUpperCase();
+
+}
+
+
+const urlRoom =
+    getRoomFromURL();
+
+
+if(urlRoom){
+
+    document
+        .getElementById("joinCode")
+        .value =
+        urlRoom;
+
+    document
+        .getElementById("homeStatus")
+        .textContent =
+        `ルーム ${urlRoom}に参加する準備ができました。`;
+
+}
+
+
+/* =========================================================
+UTIL
+========================================================= */
+
+function randomRoom(){
+
+    const chars =
+        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let result = "";
+
+    for(let i=0;i<6;i++){
+
+        result +=
+            chars[
+                Math.floor(
+                    Math.random() *
+                    chars.length
+                )
+            ];
+
+    }
+
+    return result;
+
+}
+
+
+async function hashPassword(password){
+
+    const data =
+        new TextEncoder().encode(
+            password
+        );
+
+    const hash =
+        await crypto.subtle.digest(
+            "SHA-256",
+            data
+        );
+
+    return Array
+        .from(
+            new Uint8Array(hash)
+        )
+        .map(
+            byte =>
+            byte.toString(16).padStart(2,"0")
+        )
+        .join("");
+
+}
+
+
+function encode(obj){
+
+    return btoa(
+        unescape(
+            encodeURIComponent(
+                JSON.stringify(obj)
+            )
+        )
+    );
+
+}
+
+
+function decode(str){
+
+    return JSON.parse(
+        decodeURIComponent(
+            escape(
+                atob(str)
+            )
+        )
+    );
+
+}
+
+
+async function copyText(text){
+
+    try{
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+    }catch{
+
+        const input =
+            document.createElement("textarea");
+
+        input.value = text;
+
+        document.body.appendChild(input);
+
+        input.select();
+
+        document.execCommand("copy");
+
+        input.remove();
+
+    }
+
+}
+
+
+/* =========================================================
+PEER INITIALIZATION
+========================================================= */
+
+function createPeer(id){
+
+    return new Promise(
+        (resolve,reject) => {
+
+            const newPeer =
+                new Peer(
+                    id,
+                    PEER_CONFIG
+                );
+
+            newPeer.on(
+                "open",
+                () => {
+
+                    peer =
+                        newPeer;
+
+                    resolve(
+                        newPeer
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "error",
+                error => {
+
+                    console.error(
+                        "PeerJSエラー:",
+                        error
+                    );
+
+                    reject(
+                        error
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "connection",
+                connection => {
+
+                    if(isHost){
+
+                        handleIncomingConnection(
+                            connection
+                        );
+
+                    }
+
+                }
+            );
+
+            newPeer.on(
+                "disconnected",
+                () => {
+
+                    console.log(
+                        "Peerサーバーとの接続が切断されました。"
+                    );
+
+                }
+            );
+
+            newPeer.on(
+                "close",
+                () => {
+
+                    console.log(
+                        "Peerが終了しました。"
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+CREATE ROOM
+========================================================= */
+
+document
+    .getElementById("createButton")
+    .onclick =
+    createRoom;
+
+
+async function createRoom(){
+
+    myName =
+        document
+            .getElementById("hostName")
+            .value
+            .trim() ||
+        "ホスト";
+
+    topic =
+        document
+            .getElementById("topicInput")
+            .value
+            .trim();
+
+    maxPlayers =
+        Number(
+            document
+                .getElementById("playerCount")
+                .value
+        );
+
+    const password =
+        document
+            .getElementById("hostPassword")
+            .value;
+
+
+    if(!topic){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "物語のテーマを入力してください。";
+
+        return;
+
+    }
+
+
+    if(!password){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "ルームパスワードを設定してください。";
+
+        return;
+
+    }
+
+
+    role =
+        "host";
+
+    isHost =
+        true;
+
+
+    roomCode =
+        randomRoom();
+
+
+    roomPasswordHash =
+        await hashPassword(
+            password
+        );
+
+
+    players = [
+
+        {
+            id:myId,
+            name:myName,
+            host:true
+        }
+
+    ];
+
+
+    showScreen(
+        "connecting"
+    );
+
+
+    document
+        .getElementById("connectingText")
+        .textContent =
+        "ルームを作成しています。";
+
+
+    try{
+
+        await createPeer(
+            roomCode
+        );
+
+        history.replaceState(
+            null,
+            "",
+            "#room=" + roomCode
+        );
+
+
+        document
+            .getElementById("hostRoomCode")
+            .textContent =
+            roomCode;
+
+
+        document
+            .getElementById("inviteLink")
+            .value =
+            location.origin +
+            location.pathname +
+            "#room=" +
+            roomCode;
+
+
+        updateHostRoom();
+
+
+        showScreen(
+            "hostRoom"
+        );
+
+
+    }catch(error){
+
+        console.error(error);
+
+        isHost =
+            false;
+
+        role =
+            null;
+
+        showScreen(
+            "home"
+        );
+
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "ルームを作成できませんでした。しばらくしてからもう一度お試しください。";
+
+    }
+
+}
+
+
+/* =========================================================
+HOST INCOMING CONNECTION
+========================================================= */
+
+function handleIncomingConnection(
+    connection
+){
+
+    console.log(
+        "新しい参加者が接続しました:",
+        connection.peer
+    );
+
+
+    connection.on(
+        "open",
+        () => {
+
+            setupConnection(
+                connection
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+JOIN ROOM
+========================================================= */
+
+document
+    .getElementById("joinButton")
+    .onclick =
+    joinRoom;
+
+
+async function joinRoom(){
+
+    myName =
+        document
+            .getElementById("joinName")
+            .value
+            .trim() ||
+        "参加者";
+
+
+    roomCode =
+        document
+            .getElementById("joinCode")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const password =
+        document
+            .getElementById("joinPassword")
+            .value;
+
+
+    if(!roomCode){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "ルームコードを入力してください。";
+
+        return;
+
+    }
+
+
+    if(!password){
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "ルームパスワードを入力してください。";
+
+        return;
+
+    }
+
+
+    role =
+        "guest";
+
+    isHost =
+        false;
+
+
+    showScreen(
+        "connecting"
+    );
+
+
+    document
+        .getElementById("connectingText")
+        .textContent =
+        "ルームに接続しています。";
+
+
+    try{
+
+        await createPeer(
+            myId
+        );
+
+
+        const connection =
+            peer.connect(
+                roomCode,
+                {
+                    reliable:true
+                }
+            );
+
+
+        connection.on(
+            "open",
+            () => {
+
+                setupConnection(
+                    connection
+                );
+
+
+                send(
+                    connection,
+                    {
+                        type:"join",
+                        id:myId,
+                        name:myName,
+                        passwordHash:
+                            hashPasswordValue
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+         * パスワードハッシュは非同期で計算します。
+         */
+        const hash =
+            await hashPassword(
+                password
+            );
+
+
+        /*
+         * 接続がすでに開いている場合でも送信できるよう、
+         * 別途待機処理を行います。
+         */
+        const sendJoin = () => {
+
+            if(
+                connection.open
+            ){
+
+                send(
+                    connection,
+                    {
+                        type:"join",
+                        id:myId,
+                        name:myName,
+                        passwordHash:hash
+                    }
+                );
+
+            }
+
+        };
+
+
+        connection.off?.(
+            "open",
+            sendJoin
+        );
+
+
+        connection.on(
+            "open",
+            sendJoin
+        );
+
+
+        history.replaceState(
+            null,
+            "",
+            "#room=" + roomCode
+        );
+
+
+    }catch(error){
+
+        console.error(error);
+
+        if(peer){
+
+            try{
+                peer.destroy();
+            }catch{}
+
+        }
+
+        peer =
+            null;
+
+
+        showScreen(
+            "home"
+        );
+
+
+        document
+            .getElementById("homeStatus")
+            .textContent =
+            "ルームに接続できませんでした。ルームコードとパスワードを確認してください。";
+
+    }
+
+}
+
+
+/*
+ * joinRoom内で未使用変数によるエラーを
+ * 防ぐためのダミー値です。
+ */
+let hashPasswordValue = "";
+
+
+/* =========================================================
+CONNECTION SETUP
+========================================================= */
+
+function setupConnection(
+    connection
+){
+
+    if(
+        connections.has(
+            connection.peer
+        )
+    ){
+
+        return;
+
+    }
+
+
+    connections.set(
+        connection.peer,
+        {
+            connection,
+            peerId:connection.peer
+        }
+    );
+
+
+    connection.on(
+        "data",
+        data => {
+
+            try{
+
+                const msg =
+                    typeof data === "string"
+                        ? JSON.parse(data)
+                        : data;
+
+                handleMessage(
+                    connection,
+                    msg
+                );
+
+            }catch(error){
+
+                console.error(
+                    "メッセージ処理エラー:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+
+    connection.on(
+        "close",
+        () => {
+
+            connections.delete(
+                connection.peer
+            );
+
+
+            if(isHost){
+
+                players =
+                    players.filter(
+                        player =>
+                        player.peerId !==
+                        connection.peer
+                    );
+
+
+                updateHostRoom();
+
+                broadcast({
+                    type:"players",
+                    players
+                });
+
+            }
+
+        }
+    );
+
+
+    connection.on(
+        "error",
+        error => {
+
+            console.error(
+                "DataConnectionエラー:",
+                error
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+SEND
+========================================================= */
+
+function send(
+    connection,
+    data
+){
+
+    if(
+        connection &&
+        connection.open
+    ){
+
+        connection.send(
+            data
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+BROADCAST
+========================================================= */
+
+function broadcast(
+    data
+){
+
+    connections.forEach(
+        item => {
+
+            send(
+                item.connection,
+                data
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+SEND TO HOST
+========================================================= */
+
+function sendToHost(
+    data
+){
+
+    const host =
+        connections.get(
+            roomCode
+        );
+
+
+    /*
+     * PeerJSではホストのpeer IDが
+     * そのままroomCodeになります。
+     */
+    if(host){
+
+        send(
+            host.connection,
+            data
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * keyが異なる場合に備えます。
+     */
+    connections.forEach(
+        item => {
+
+            send(
+                item.connection,
+                data
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+MESSAGES
+========================================================= */
+
+async function handleMessage(
+    connection,
+    msg
+){
+
+    switch(msg.type){
+
+        /* =============================================
+           JOIN
+        ============================================= */
+
+        case "join":
+
+            if(!isHost)
+                break;
+
+
+            if(
+                players.length >=
+                maxPlayers
+            ){
+
+                send(
+                    connection,
+                    {
+                        type:"roomFull"
+                    }
+                );
+
+                return;
+
+            }
+
+
+            const correctPassword =
+                msg.passwordHash ===
+                roomPasswordHash;
+
+
+            if(!correctPassword){
+
+                send(
+                    connection,
+                    {
+                        type:"wrongPassword"
+                    }
+                );
+
+                return;
+
+            }
+
+
+            if(
+                players.some(
+                    p =>
+                    p.id === msg.id
+                )
+            ){
+
+                break;
+
+            }
+
+
+            players.push({
+
+                id:
+                    msg.id,
+
+                name:
+                    msg.name,
+
+                host:false,
+
+                peerId:
+                    connection.peer
+
+            });
+
+
+            send(
+                connection,
+                {
+                    type:"welcome",
+                    topic,
+                    maxPlayers,
+                    players
+                }
+            );
+
+
+            broadcast({
+
+                type:"players",
+
+                players
+
+            });
+
+
+            updateHostRoom();
+
+            break;
+
+
+        /* =============================================
+           WELCOME
+        ============================================= */
+
+        case "welcome":
+
+            topic =
+                msg.topic;
+
+            maxPlayers =
+                msg.maxPlayers;
+
+            players =
+                msg.players || [];
+
+
+            updateLobby();
+
+            showScreen(
+                "lobby"
+            );
+
+            break;
+
+
+        /* =============================================
+           ROOM FULL
+        ============================================= */
+
+        case "roomFull":
+
+            document
+                .getElementById("connectingText")
+                .textContent =
+                "このルームは設定された定員に達しています。";
+
+
+            setTimeout(
+                () => {
+
+                    showScreen(
+                        "home"
+                    );
+
+                    document
+                        .getElementById("homeStatus")
+                        .textContent =
+                        "このルームは設定された定員に達しています。";
+
+                },
+                1500
+            );
+
+            break;
+
+
+        /* =============================================
+           WRONG PASSWORD
+        ============================================= */
+
+        case "wrongPassword":
+
+            document
+                .getElementById("connectingText")
+                .textContent =
+                "パスワードが正しくありません。";
+
+
+            setTimeout(
+                () => {
+
+                    showScreen(
+                        "home"
+                    );
+
+                    document
+                        .getElementById("homeStatus")
+                        .textContent =
+                        "ルームパスワードが正しくありません。";
+
+                },
+                1200
+            );
+
+            break;
+
+
+        /* =============================================
+           PLAYERS
+        ============================================= */
+
+        case "players":
+
+            players =
+                msg.players || [];
+
+            updateLobby();
+
+            if(isHost){
+
+                updateHostRoom();
+
+            }
+
+            break;
+
+
+        /* =============================================
+           GAME START
+        ============================================= */
+
+        case "gameStart":
+
+            currentTurn =
+                msg.turn;
+
+            drawings = {};
+
+            audios = {};
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        /* =============================================
+           DRAWING
+        ============================================= */
+
+        case "drawing":
+
+            drawings[
+                msg.playerIndex
+            ] =
+            msg.image;
+
+            break;
+
+
+        /* =============================================
+           ACT
+        ============================================= */
+
+        case "act":
+
+            audios[
+                msg.playerIndex
+            ] =
+            msg.audio;
+
+            break;
+
+
+        /* =============================================
+           TURN
+        ============================================= */
+
+        case "turn":
+
+            currentTurn =
+                msg.turn;
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        /* =============================================
+           TURN REQUEST
+        ============================================= */
+
+        case "turnRequest":
+
+            if(!isHost)
+                break;
+
+
+            currentTurn =
+                msg.turn;
+
+
+            broadcast({
+
+                type:"turn",
+
+                turn:
+                    msg.turn,
+
+                previous:
+                    msg.previous
+
+            });
+
+
+            startTurn(
+                msg.previous ||
+                null
+            );
+
+            break;
+
+
+        /* =============================================
+           FINISH REQUEST
+        ============================================= */
+
+        case "finishRequest":
+
+            if(!isHost)
+                break;
+
+
+            drawings =
+                msg.drawings ||
+                drawings;
+
+            audios =
+                msg.audios ||
+                audios;
+
+
+            broadcast({
+
+                type:"finished",
+
+                drawings,
+
+                audios
+
+            });
+
+
+            showResult();
+
+            break;
+
+
+        /* =============================================
+           FINISHED
+        ============================================= */
+
+        case "finished":
+
+            drawings =
+                msg.drawings ||
+                {};
+
+            audios =
+                msg.audios ||
+                {};
+
+            showResult();
+
+            break;
+
+
+        /* =============================================
+           VOTE REQUEST
+        ============================================= */
+
+        case "voteRequest":
+
+            if(!isHost)
+                break;
+
+            if(voteEnded)
+                break;
+
+            if(!msg.voterId)
+                break;
+
+            if(
+                !Number.isInteger(
+                    msg.scene
+                )
+            )
+                break;
+
+            if(
+                msg.scene < 0 ||
+                msg.scene >= players.length
+            )
+                break;
+
+            if(
+                players[msg.scene] &&
+                players[msg.scene].id ===
+                msg.voterId
+            )
+                break;
+
+            if(
+                voteVoters[msg.voterId]
+                !== undefined
+            )
+                break;
+
+
+            voteVoters[
+                msg.voterId
+            ] =
+            msg.scene;
+
+
+            votes[
+                msg.scene
+            ] =
+            (votes[msg.scene] || 0) + 1;
+
+
+            broadcast({
+
+                type:"voteAccepted",
+
+                voterId:
+                    msg.voterId,
+
+                scene:
+                    msg.scene,
+
+                votes:
+                    votes
+
+            });
+
+
+            renderVotes();
+
+            checkVoteFinished();
+
+            break;
+
+
+        /* =============================================
+           VOTE ACCEPTED
+        ============================================= */
+
+        case "voteAccepted":
+
+            votes =
+                msg.votes ||
+                {};
+
+
+            if(
+                msg.voterId ===
+                myId
+            ){
+
+                myVote =
+                    msg.scene;
+
+            }
+
+
+            renderVotes();
+
+            break;
+
+
+        /* =============================================
+           VOTE END
+        ============================================= */
+
+        case "voteEnd":
+
+            voteEnded =
+                true;
+
+            clearInterval(
+                voteTimer
+            );
+
+            votes =
+                msg.votes ||
+                {};
+
+            showWinner();
+
+            break;
+
+    }
+
+}
+
+
+/* =========================================================
+HOST ROOM UI
+========================================================= */
+
+function updateHostRoom(){
+
+    document
+        .getElementById("hostRoomCode")
+        .textContent =
+        roomCode;
+
+
+    document
+        .getElementById("hostPlayerStatus")
+        .textContent =
+        `${players.length} / ${maxPlayers}人参加`;
+
+
+    const container =
+        document.getElementById(
+            "hostPlayers"
+        );
+
+
+    container.innerHTML = "";
+
+
+    players.forEach(
+        player => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "player";
+
+            div.textContent =
+                player.name +
+                (
+                    player.host
+                        ? " 👑"
+                        : ""
+                );
+
+            container.appendChild(
+                div
+            );
+
+        }
+    );
+
+
+    const startButton =
+        document.getElementById(
+            "hostStartGame"
+        );
+
+
+    startButton.disabled =
+        players.length < 2;
+
+}
+
+
+/* =========================================================
+COPY INVITE
+========================================================= */
+
+document
+    .getElementById("copyInvite")
+    .onclick =
+    () => {
+
+        const link =
+            document
+                .getElementById("inviteLink")
+                .value;
+
+
+        copyText(
+            link
+        );
+
+
+        document
+            .getElementById("hostRoomStatus")
+            .textContent =
+            "招待リンクをコピーしました。";
+
+    };
+
+
+/* =========================================================
+START GAME
+========================================================= */
+
+document
+    .getElementById("hostStartGame")
+    .onclick =
+    startGame;
+
+
+document
+    .getElementById("startGame")
+    .onclick =
+    startGame;
+
+
+function startGame(){
+
+    if(!isHost)
+        return;
+
+
+    if(
+        players.length < 2
+    ){
+
+        const status =
+            document.getElementById(
+                "hostRoomStatus"
+            ) ||
+            document.getElementById(
+                "lobbyStatus"
+            );
+
+
+        status.textContent =
+            "最低2人必要です。";
+
+        return;
+
+    }
+
+
+    if(
+        players.length <
+        maxPlayers
+    ){
+
+        const proceed =
+            confirm(
+                `現在${players.length}人が参加しています。ゲームを開始しますか？`
+            );
+
+
+        if(!proceed)
+            return;
+
+    }
+
+
+    currentTurn =
+        0;
+
+    drawings = {};
+
+    audios = {};
+
+
+    broadcast({
+
+        type:"gameStart",
+
+        turn:0,
+
+        previous:null
+
+    });
+
+
+    startTurn(
+        null
+    );
+
+}
+
+
+/* =========================================================
+LOBBY
+========================================================= */
+
+function updateLobby(){
+
+    const list =
+        document.getElementById(
+            "players"
+        );
+
+
+    list.innerHTML = "";
+
+
+    players.forEach(
+        p => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "player";
+
+            div.textContent =
+                p.name +
+                (
+                    p.host
+                        ? " 👑"
+                        : ""
+                );
+
+            list.appendChild(
+                div
+            );
+
+        }
+    );
+
+
+    document
+        .getElementById(
+            "playerStatus"
+        )
+        .textContent =
+        `${players.length} / ${maxPlayers}人参加`;
+
+
+    document
+        .getElementById(
+            "lobbyRoomCode"
+        )
+        .textContent =
+        roomCode;
+
+
+    document
+        .getElementById(
+            "lobbyTopic"
+        )
+        .textContent =
+        topic;
+
+
+    const startButton =
+        document.getElementById(
+            "startGame"
+        );
+
+
+    startButton.style.display =
+        isHost
+            ? "block"
+            : "none";
+
+}
+
+
+/* =========================================================
+START TURN
+========================================================= */
+
+function startTurn(
+    previous
+){
+
+    const player =
+        players[currentTurn];
+
+
+    if(!player){
+
+        finishGame();
+
+        return;
+
+    }
+
+
+    if(
+        player.id ===
+        myId
+    ){
+
+        showDraw(
+            previous
+        );
+
+    }else{
+
+        showScreen(
+            "waiting"
+        );
+
+
+        document
+            .getElementById(
+                "waitingTitle"
+            )
+            .textContent =
+            `${player.name}さんの番です。`;
+
+
+        document
+            .getElementById(
+                "waitingText"
+            )
+            .textContent =
+            "絵を描いて録音している間、しばらくお待ちください。";
+
+    }
+
+}
+
+
+/* =========================================================
+DRAW CANVAS
+========================================================= */
+
+const drawCanvas =
+    document.getElementById(
+        "drawCanvas"
+    );
+
+
+const drawCtx =
+    drawCanvas.getContext(
+        "2d"
+    );
+
+
+let drawingNow = false;
+
+
+function clearDraw(){
+
+    drawCtx.fillStyle =
+        "#ffffff";
+
+    drawCtx.fillRect(
+        0,
+        0,
+        drawCanvas.width,
+        drawCanvas.height
+    );
+
+}
+
+
+clearDraw();
+
+
+function pointerPosition(
+    event
+){
+
+    const rect =
+        drawCanvas.getBoundingClientRect();
+
+
+    const source =
+        event.touches
+            ? event.touches[0]
+            : event;
+
+
+    return {
+
+        x:
+            (source.clientX -
+            rect.left) *
+            drawCanvas.width /
+            rect.width,
+
+        y:
+            (source.clientY -
+            rect.top) *
+            drawCanvas.height /
+            rect.height
+
+    };
+
+}
+
+
+function startDraw(
+    event
+){
+
+    event.preventDefault();
+
+    drawingNow =
+        true;
+
+
+    const p =
+        pointerPosition(
+            event
+        );
+
+
+    drawCtx.beginPath();
+
+
+    drawCtx.moveTo(
+        p.x,
+        p.y
+    );
+
+}
+
+
+function moveDraw(
+    event
+){
+
+    if(!drawingNow)
+        return;
+
+
+    event.preventDefault();
+
+
+    const p =
+        pointerPosition(
+            event
+        );
+
+
+    drawCtx.strokeStyle =
+        document
+            .getElementById(
+                "colorPicker"
+            )
+            .value;
+
+
+    drawCtx.lineWidth =
+        Number(
+            document
+                .getElementById(
+                    "brushSize"
+                )
+                .value
+        );
+
+
+    drawCtx.lineCap =
+        "round";
+
+    drawCtx.lineJoin =
+        "round";
+
+
+    drawCtx.lineTo(
+        p.x,
+        p.y
+    );
+
+
+    drawCtx.stroke();
+
+}
+
+
+drawCanvas.addEventListener(
+    "mousedown",
+    startDraw
+);
+
+
+drawCanvas.addEventListener(
+    "mousemove",
+    moveDraw
+);
+
+
+drawCanvas.addEventListener(
+    "mouseup",
+    () => {
+        drawingNow = false;
+    }
+);
+
+
+drawCanvas.addEventListener(
+    "mouseleave",
+    () => {
+        drawingNow = false;
+    }
+);
+
+
+drawCanvas.addEventListener(
+    "touchstart",
+    startDraw,
+    {passive:false}
+);
+
+
+drawCanvas.addEventListener(
+    "touchmove",
+    moveDraw,
+    {passive:false}
+);
+
+
+drawCanvas.addEventListener(
+    "touchend",
+    () => {
+        drawingNow = false;
+    }
+);
+
+
+document
+    .getElementById(
+        "clearCanvas"
+    )
+    .onclick =
+    clearDraw;
+
+
+/* =========================================================
+DRAW SCREEN
+========================================================= */
+
+function showDraw(
+    previous
+){
+
+    showScreen(
+        "draw"
+    );
+
+
+    submittedDrawing =
+        false;
+
+
+    clearDraw();
+
+
+    document
+        .getElementById(
+            "drawTopic"
+        )
+        .textContent =
+        topic;
+
+
+    const previousCard =
+        document.getElementById(
+            "previousCard"
+        );
+
+
+    if(previous){
+
+        previousCard
+            .classList
+            .remove("hidden");
+
+
+        const canvas =
+            document.getElementById(
+                "previousCanvas"
+            );
+
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+
+        const img =
+            new Image();
+
+
+        img.onload = () => {
+
+            ctx.clearRect(
+                0,
+                0,
+                800,
+                600
+            );
+
+
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                800,
+                600
+            );
+
+        };
+
+
+        img.src =
+            previous;
+
+    }else{
+
+        previousCard
+            .classList
+            .add("hidden");
+
+    }
+
+
+    startDrawTimer();
+
+}
+
+
+/* =========================================================
+DRAW TIMER
+========================================================= */
+
+function startDrawTimer(){
+
+    clearInterval(
+        drawInterval
+    );
+
+
+    let remaining =
+        30;
+
+
+    document
+        .getElementById(
+            "drawTimer"
+        )
+        .textContent =
+        remaining;
+
+
+    drawInterval =
+        setInterval(
+            () => {
+
+                remaining--;
+
+
+                document
+                    .getElementById(
+                        "drawTimer"
+                    )
+                    .textContent =
+                    remaining;
+
+
+                if(
+                    remaining <= 0
+                ){
+
+                    clearInterval(
+                        drawInterval
+                    );
+
+
+                    submitDrawing();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+SUBMIT DRAWING
+========================================================= */
+
+document
+    .getElementById(
+        "submitDrawing"
+    )
+    .onclick =
+    submitDrawing;
+
+
+function submitDrawing(){
+
+    if(submittedDrawing)
+        return;
+
+
+    submittedDrawing =
+        true;
+
+
+    clearInterval(
+        drawInterval
+    );
+
+
+    const image =
+        drawCanvas.toDataURL(
+            "image/webp",
+            .65
+        );
+
+
+    drawings[
+        currentTurn
+    ] =
+    image;
+
+
+    broadcast({
+
+        type:"drawing",
+
+        playerIndex:
+            currentTurn,
+
+        image
+
+    });
+
+
+    showAct(
+        image
+    );
+
+}
+
+
+/* =========================================================
+ACT
+========================================================= */
+
+function showAct(
+    image
+){
+
+    showScreen(
+        "act"
+    );
+
+
+    submittedRecording =
+        false;
+
+
+    document
+        .getElementById(
+            "actTopic"
+        )
+        .textContent =
+        topic;
+
+
+    document
+        .getElementById(
+            "recordStatus"
+        )
+        .textContent =
+        "自由に演じてみよう！";
+
+
+    document
+        .getElementById(
+            "recordButton"
+        )
+        .textContent =
+        "🎙️ 録音開始";
+
+
+    const canvas =
+        document.getElementById(
+            "actCanvas"
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const img =
+        new Image();
+
+
+    img.onload = () => {
+
+        ctx.clearRect(
+            0,
+            0,
+            800,
+            600
+        );
+
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            800,
+            600
+        );
+
+    };
+
+
+    img.src =
+        image;
+
+}
+
+
+/* =========================================================
+RECORD
+========================================================= */
+
+document
+    .getElementById(
+        "recordButton"
+    )
+    .onclick =
+    startRecording;
+
+
+async function startRecording(){
+
+    if(
+        mediaRecorder &&
+        mediaRecorder.state ===
+        "recording"
+    ){
+
+        stopRecording();
+
+        return;
+
+    }
+
+
+    try{
+
+        const stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio:true
+                });
+
+
+        recordedChunks = [];
+
+
+        let mimeType =
+            "audio/webm";
+
+
+        if(
+            !MediaRecorder.isTypeSupported(
+                mimeType
+            )
+        ){
+
+            mimeType =
+                "";
+
+        }
+
+
+        mediaRecorder =
+            new MediaRecorder(
+                stream,
+                mimeType
+                    ? {mimeType}
+                    : undefined
+            );
+
+
+        mediaRecorder.ondataavailable =
+            event => {
+
+                if(
+                    event.data.size
+                ){
+
+                    recordedChunks.push(
+                        event.data
+                    );
+
+                }
+
+            };
+
+
+        mediaRecorder.onstop =
+            () => {
+
+                const blob =
+                    new Blob(
+                        recordedChunks,
+                        {
+                            type:
+                                "audio/webm"
+                        }
+                    );
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onloadend =
+                    () => {
+
+                        audios[
+                            currentTurn
+                        ] =
+                        reader.result;
+
+
+                        broadcast({
+
+                            type:"act",
+
+                            playerIndex:
+                                currentTurn,
+
+                            audio:
+                                reader.result
+
+                        });
+
+
+                        document
+                            .getElementById(
+                                "recordStatus"
+                            )
+                            .textContent =
+                            "録音が完了しました。";
+
+
+                        nextTurn();
+
+                    };
+
+
+                reader.readAsDataURL(
+                    blob
+                );
+
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                        track.stop()
+                    );
+
+            };
+
+
+        mediaRecorder.start();
+
+
+        document
+            .getElementById(
+                "recordButton"
+            )
+            .textContent =
+            "⏹ 録音終了";
+
+
+        startRecordTimer();
+
+
+    }catch(error){
+
+        console.error(error);
+
+
+        alert(
+            "マイクの使用許可が必要です。"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+RECORD TIMER
+========================================================= */
+
+function startRecordTimer(){
+
+    clearInterval(
+        recordInterval
+    );
+
+
+    let remaining =
+        15;
+
+
+    document
+        .getElementById(
+            "recordTimer"
+        )
+        .textContent =
+        remaining;
+
+
+    recordInterval =
+        setInterval(
+            () => {
+
+                remaining--;
+
+
+                document
+                    .getElementById(
+                        "recordTimer"
+                    )
+                    .textContent =
+                    remaining;
+
+
+                if(
+                    remaining <= 0
+                ){
+
+                    stopRecording();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+STOP RECORDING
+========================================================= */
+
+function stopRecording(){
+
+    clearInterval(
+        recordInterval
+    );
+
+
+    document
+        .getElementById(
+            "recordButton"
+        )
+        .textContent =
+        "🎙️ 録音開始";
+
+
+    if(
+        mediaRecorder &&
+        mediaRecorder.state ===
+        "recording"
+    ){
+
+        mediaRecorder.stop();
+
+    }
+
+}
+
+
+/* =========================================================
+NEXT TURN
+========================================================= */
+
+function nextTurn(){
+
+    currentTurn++;
+
+
+    if(
+        currentTurn >=
+        players.length
+    ){
+
+        finishGame();
+
+        return;
+
+    }
+
+
+    const previous =
+        drawings[
+            currentTurn - 1
+        ];
+
+
+    if(isHost){
+
+        broadcast({
+
+            type:"turn",
+
+            turn:
+                currentTurn,
+
+            previous
+
+        });
+
+
+    }else{
+
+        sendToHost({
+
+            type:"turnRequest",
+
+            turn:
+                currentTurn,
+
+            previous
+
+        });
+
+    }
+
+
+    startTurn(
+        previous
+    );
+
+}
+
+
+/* =========================================================
+FINISH GAME
+========================================================= */
+
+function finishGame(){
+
+    if(isHost){
+
+        broadcast({
+
+            type:"finished",
+
+            drawings,
+
+            audios
+
+        });
+
+
+        showResult();
+
+    }else{
+
+        sendToHost({
+
+            type:"finishRequest",
+
+            drawings,
+
+            audios
+
+        });
+
+    }
+
+}
+
+
+/* =========================================================
+RESULT
+========================================================= */
+
+function showResult(){
+
+    showScreen(
+        "result"
+    );
+
+
+    votes = {};
+
+    voteVoters = {};
+
+    myVote = null;
+
+    voteEnded = false;
+
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    const container =
+        document.getElementById(
+            "resultScenes"
+        );
+
+
+    container.innerHTML = "";
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(!drawings[i])
+            continue;
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "card scene";
+
+
+        card.dataset.scene =
+            i;
+
+
+        const title =
+            document.createElement(
+                "h3"
+            );
+
+
+        title.textContent =
+            `Scene ${i + 1} — ${
+                players[i]
+                    ? players[i].name
+                    : "参加者"
+            }`;
+
+
+        card.appendChild(
+            title
+        );
+
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+
+        canvas.width =
+            800;
+
+        canvas.height =
+            600;
+
+
+        card.appendChild(
+            canvas
+        );
+
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+
+        const img =
+            new Image();
+
+
+        img.onload = () => {
+
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                800,
+                600
+            );
+
+        };
+
+
+        img.src =
+            drawings[i];
+
+
+        if(audios[i]){
+
+            const audio =
+                document.createElement(
+                    "audio"
+                );
+
+
+            audio.controls =
+                true;
+
+
+            audio.src =
+                audios[i];
+
+
+            card.appendChild(
+                audio
+            );
+
+        }
+
+
+        const voteCount =
+            document.createElement(
+                "div"
+            );
+
+
+        voteCount.className =
+            "vote-count";
+
+
+        voteCount.id =
+            `votes-${i}`;
+
+
+        voteCount.textContent =
+            "👍 0票";
+
+
+        card.appendChild(
+            voteCount
+        );
+
+
+        const voteButton =
+            document.createElement(
+                "button"
+            );
+
+
+        voteButton.className =
+            "primary vote-button";
+
+
+        voteButton.dataset.scene =
+            i;
+
+
+        voteButton.textContent =
+            "👍 このシーンに投票";
+
+
+        if(
+            players[i] &&
+            players[i].id ===
+            myId
+        ){
+
+            voteButton.disabled =
+                true;
+
+
+            voteButton.textContent =
+                "自分のシーンです。";
+
+        }
+
+
+        voteButton.onclick =
+            () => {
+
+                submitVote(
+                    i
+                );
+
+            };
+
+
+        card.appendChild(
+            voteButton
+        );
+
+
+        container.appendChild(
+            card
+        );
+
+    }
+
+
+    const voteInfo =
+        document.createElement(
+            "div"
+        );
+
+
+    voteInfo.id =
+        "voteInfo";
+
+
+    voteInfo.className =
+        "card center";
+
+
+    voteInfo.innerHTML = `
+
+        <div class="phase">
+            VOTE
+        </div>
+
+        <h2>
+            🏆 一番面白かったシーンは？
+        </h2>
+
+        <p class="small">
+            1人1票まで投票できます。
+        </p>
+
+        <div
+            id="voteTimer"
+            style="
+                font-size:48px;
+                font-weight:1000;
+                margin:10px;
+            "
+        >
+            15
+        </div>
+
+        <div
+            id="winnerBox"
+            class="hidden"
+        ></div>
+
+    `;
+
+
+    container.appendChild(
+        voteInfo
+    );
+
+
+    if(isHost){
+
+        const endButton =
+            document.createElement(
+                "button"
+            );
+
+
+        endButton.className =
+            "secondary";
+
+
+        endButton.textContent =
+            "🏁 投票終了";
+
+
+        endButton.style.width =
+            "100%";
+
+
+        endButton.onclick =
+            endVoting;
+
+
+        voteInfo.appendChild(
+            endButton
+        );
+
+    }
+
+
+    startVoteTimer();
+
+}
+
+
+/* =========================================================
+SUBMIT VOTE
+========================================================= */
+
+function submitVote(
+    scene
+){
+
+    if(voteEnded)
+        return;
+
+
+    if(myVote !== null){
+
+        alert(
+            "投票は1回だけできます。"
+        );
+
+        return;
+
+    }
+
+
+    if(
+        players[scene] &&
+        players[scene].id ===
+        myId
+    ){
+
+        return;
+
+    }
+
+
+    if(isHost){
+
+        voteVoters[myId] =
+            scene;
+
+
+        votes[scene] =
+            (votes[scene] || 0) + 1;
+
+
+        myVote =
+            scene;
+
+
+        broadcast({
+
+            type:"voteAccepted",
+
+            voterId:
+                myId,
+
+            scene:
+                scene,
+
+            votes:
+                votes
+
+        });
+
+
+        renderVotes();
+
+        checkVoteFinished();
+
+
+    }else{
+
+        sendToHost({
+
+            type:"voteRequest",
+
+            voterId:
+                myId,
+
+            scene:
+                scene
+
+        });
+
+    }
+
+}
+
+
+/* =========================================================
+RENDER VOTES
+========================================================= */
+
+function renderVotes(){
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        const element =
+            document.getElementById(
+                `votes-${i}`
+            );
+
+
+        if(element){
+
+            element.textContent =
+                `👍 ${votes[i] || 0}票`;
+
+        }
+
+    }
+
+
+    document
+        .querySelectorAll(
+            ".vote-button"
+        )
+        .forEach(
+            button => {
+
+                const scene =
+                    Number(
+                        button.dataset.scene
+                    );
+
+
+                if(
+                    myVote !== null &&
+                    scene !== myVote
+                ){
+
+                    button.disabled =
+                        true;
+
+                }
+
+
+                if(
+                    myVote === scene
+                ){
+
+                    button.disabled =
+                        true;
+
+
+                    button.textContent =
+                        "✓ 投票しました。";
+
+                }
+
+
+                if(voteEnded){
+
+                    button.disabled =
+                        true;
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+VOTE TIMER
+========================================================= */
+
+function startVoteTimer(){
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    let remaining =
+        15;
+
+
+    const timer =
+        document.getElementById(
+            "voteTimer"
+        );
+
+
+    if(timer){
+
+        timer.textContent =
+            remaining;
+
+    }
+
+
+    voteTimer =
+        setInterval(
+            () => {
+
+                remaining--;
+
+
+                const currentTimer =
+                    document.getElementById(
+                        "voteTimer"
+                    );
+
+
+                if(currentTimer){
+
+                    currentTimer.textContent =
+                        remaining;
+
+                }
+
+
+                if(
+                    remaining <= 0
+                ){
+
+                    clearInterval(
+                        voteTimer
+                    );
+
+
+                    if(isHost){
+
+                        endVoting();
+
+                    }
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* =========================================================
+CHECK VOTE
+========================================================= */
+
+function checkVoteFinished(){
+
+    if(!isHost)
+        return;
+
+
+    const voterCount =
+        Object.keys(
+            voteVoters
+        ).length;
+
+
+    if(
+        voterCount >=
+        players.length
+    ){
+
+        endVoting();
+
+    }
+
+}
+
+
+/* =========================================================
+END VOTING
+========================================================= */
+
+function endVoting(){
+
+    if(!isHost)
+        return;
+
+
+    if(voteEnded)
+        return;
+
+
+    voteEnded =
+        true;
+
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    broadcast({
+
+        type:"voteEnd",
+
+        votes:
+            votes
+
+    });
+
+
+    showWinner();
+
+}
+
+
+/* =========================================================
+WINNER
+========================================================= */
+
+function showWinner(){
+
+    voteEnded =
+        true;
+
+
+    clearInterval(
+        voteTimer
+    );
+
+
+    let highest =
+        0;
+
+
+    Object.values(
+        votes
+    ).forEach(
+        count => {
+
+            highest =
+                Math.max(
+                    highest,
+                    count
+                );
+
+        }
+    );
+
+
+    const winners = [];
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(
+            (votes[i] || 0) ===
+            highest &&
+            highest > 0
+        ){
+
+            winners.push(
+                i
+            );
+
+        }
+
+    }
+
+
+    const box =
+        document.getElementById(
+            "winnerBox"
+        );
+
+
+    if(!box)
+        return;
+
+
+    box.classList.remove(
+        "hidden"
+    );
+
+
+    if(highest === 0){
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:40px;
+                margin-bottom:8px;
+            ">
+                🤷
+            </div>
+
+            <h2>
+                まだ得票したシーンはありません。
+            </h2>
+
+        `;
+
+
+        return;
+
+    }
+
+
+    if(winners.length > 1){
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:45px;
+                margin-bottom:8px;
+            ">
+                🏆
+            </div>
+
+            <h2>
+                同率優勝です！
+            </h2>
+
+            <p>
+                ${winners
+                    .map(
+                        i =>
+                        `<strong>${
+                            players[i]?.name ||
+                            `Scene ${i+1}`
+                        }</strong>`
+                    )
+                    .join(" · ")
+                }
+            </p>
+
+            <p class="small">
+                ${highest}票を獲得しました。
+            </p>
+
+        `;
+
+    }else{
+
+        const winner =
+            winners[0];
+
+
+        box.innerHTML = `
+
+            <div style="
+                font-size:60px;
+                margin-bottom:4px;
+            ">
+                🏆
+            </div>
+
+            <h2>
+                ${
+                    players[winner]?.name ||
+                    `Scene ${winner + 1}`
+                }さんのシーンが優勝しました！
+            </h2>
+
+            <p style="
+                font-size:24px;
+                font-weight:1000;
+            ">
+                ${highest}票
+            </p>
+
+            <p class="small">
+                🎉 最多得票を獲得しました！
+            </p>
+
+        `;
+
+    }
+
+
+    winners.forEach(
+        index => {
+
+            const card =
+                document.querySelector(
+                    `.scene[data-scene="${index}"]`
+                );
+
+
+            if(card){
+
+                card.classList.add(
+                    "winner"
+                );
+
+
+                if(
+                    !card.querySelector(
+                        ".winner-badge"
+                    )
+                ){
+
+                    const badge =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    badge.className =
+                        "winner-badge";
+
+
+                    badge.textContent =
+                        "🏆 最多得票";
+
+
+                    card.insertBefore(
+                        badge,
+                        card.firstChild
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+
+    document
+        .querySelectorAll(
+            ".vote-button"
+        )
+        .forEach(
+            button => {
+
+                button.disabled =
+                    true;
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+PLAY ALL
+========================================================= */
+
+document
+    .getElementById(
+        "playAll"
+    )
+    .onclick =
+    async () => {
+
+        const audioElements =
+            document.querySelectorAll(
+                "#resultScenes audio"
+            );
+
+
+        for(
+            const audio
+            of audioElements
+        ){
+
+            audio.currentTime =
+                0;
+
+
+            try{
+
+                await audio.play();
+
+            }catch{
+
+            }
+
+
+            await new Promise(
+                resolve => {
+
+                    audio.onended =
+                        resolve;
+
+                }
+            );
+
+        }
+
+    };
+
+
+/* =========================================================
+EXPORT WEBM
+========================================================= */
+
+document
+    .getElementById(
+        "exportVideo"
+    )
+    .onclick =
+    exportWebM;
+
+
+async function exportWebM(){
+
+    if(
+        !Object.keys(
+            drawings
+        ).length
+    ){
+
+        document
+            .getElementById(
+                "resultStatus"
+            )
+            .textContent =
+            "保存する絵がありません。";
+
+        return;
+
+    }
+
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+
+    canvas.width =
+        800;
+
+
+    canvas.height =
+        600;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const stream =
+        canvas.captureStream(
+            30
+        );
+
+
+    let mimeType =
+        "video/webm";
+
+
+    if(
+        !MediaRecorder.isTypeSupported(
+            mimeType
+        )
+    ){
+
+        mimeType =
+            "";
+
+    }
+
+
+    const recorder =
+        new MediaRecorder(
+            stream,
+            mimeType
+                ? {mimeType}
+                : undefined
+        );
+
+
+    const chunks = [];
+
+
+    recorder.ondataavailable =
+        event => {
+
+            if(
+                event.data.size
+            ){
+
+                chunks.push(
+                    event.data
+                );
+
+            }
+
+        };
+
+
+    recorder.onstop =
+        () => {
+
+            const blob =
+                new Blob(
+                    chunks,
+                    {
+                        type:
+                            "video/webm"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const a =
+                document.createElement(
+                    "a"
+                );
+
+
+            a.href =
+                url;
+
+
+            a.download =
+                "draw-and-act.webm";
+
+
+            a.click();
+
+
+            setTimeout(
+                () =>
+                URL.revokeObjectURL(
+                    url
+                ),
+                1000
+            );
+
+
+            document
+                .getElementById(
+                    "resultStatus"
+                )
+                .textContent =
+                "WebMの保存が完了しました。";
+
+        };
+
+
+    recorder.start();
+
+
+    for(
+        let i = 0;
+        i < players.length;
+        i++
+    ){
+
+        if(!drawings[i])
+            continue;
+
+
+        const img =
+            new Image();
+
+
+        await new Promise(
+            resolve => {
+
+                img.onload =
+                    resolve;
+
+                img.src =
+                    drawings[i];
+
+            }
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.fillRect(
+            0,
+            0,
+            800,
+            600
+        );
+
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            800,
+            600
+        );
+
+
+        await new Promise(
+            resolve =>
+            setTimeout(
+                resolve,
+                2000
+            )
+        );
+
+    }
+
+
+    recorder.stop();
+
+}
+
+
+/* =========================================================
+INITIAL
+========================================================= */
+
+if(urlRoom){
+
+    document
+        .getElementById(
+            "joinCode"
+        )
+        .value =
+        urlRoom;
+
+}
+
+
+/* =========================================================
+FIX: GUEST JOIN PASSWORD
+========================================================= */
+
+/*
+ * 上記のjoinRoomで接続後にパスワードハッシュを
+ * 安全に送信するため、connection openイベントを
+ * 別途処理します。
+ */
+
+document
+    .getElementById("joinButton")
+    .addEventListener(
+        "click",
+        async () => {
+
+            /*
+             * 実際のjoin処理はonclickで行うため、
+             * ここでは追加の処理を行いません。
+             */
+
+        }
+    );
+
+
+/* =========================================================
+REPLACE JOIN FUNCTION
+========================================================= */
+
+/*
+ * 既存のjoinRoomよりシンプルで安定したバージョンとして
+ * 再定義します。
+ */
+
+document
+    .getElementById("joinButton")
+    .onclick =
+    async () => {
+
+        myName =
+            document
+                .getElementById("joinName")
+                .value
+                .trim() ||
+            "参加者";
+
+
+        roomCode =
+            document
+                .getElementById("joinCode")
+                .value
+                .trim()
+                .toUpperCase();
+
+
+        const password =
+            document
+                .getElementById("joinPassword")
+                .value;
+
+
+        if(!roomCode){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "ルームコードを入力してください。";
+
+            return;
+
+        }
+
+
+        if(!password){
+
+            document
+                .getElementById("homeStatus")
+                .textContent =
+                "ルームパスワードを入力してください。";
+
+            return;
+
+        }
+
+
+        const passwordHash =
+            await hashPassword(
+                password
+            );
+
+
+        role =
+            "guest";
+
+        isHost =
+            false;
+
+
+        showScreen(
+            "connecting"
+        );
+
+
+        document
+            .getElementById("connectingText")
+            .textContent =
+            "ルームに接続しています。";
+
+
+        try{
+
+            await createPeer(
+                myId
+            );
+
+
+            const connection =
+                peer.connect(
+                    roomCode,
+                    {
+                        reliable:true
+                    }
+                );
+
+
+            connection.on(
+                "open",
+                () => {
+
+                    setupConnection(
+                        connection
+                    );
+
+
+                    send(
+                        connection,
+                        {
+                            type:"join",
+                            id:myId,
+                            name:myName,
+                            passwordHash
+                        }
+                    );
+
+                }
+            );
+
+
+            connection.on(
+                "error",
+                error => {
+
+                    console.error(
+                        error
+                    );
+
+                }
+            );
+
+
+            history.replaceState(
+                null,
+                "",
+                "#room=" +
+                roomCode
+            );
+
+
+        }catch(error){
+
+            console.error(error);
+
+
+            if(peer){
+
+                try{
+                    peer.destroy();
+                }catch{}
+
+            }
+
+
+            peer =
+                null;
+
+
+            showScreen(
+                "home"
+            );
+
+
+            document
+                .getElementById(
+                    "homeStatus"
+                )
+                .textContent =
+                "ルームに接続できませんでした。ルームコードとパスワードを確認してください。";
+
+        }
+
+    };
+
+</script>
+
+</body>
+</html>
